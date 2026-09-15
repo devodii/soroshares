@@ -30,25 +30,21 @@ if (typeof window !== "undefined") {
   window.Buffer = window.Buffer || Buffer;
 }
 
-
-
-
 export const Errors = {
-  1: {message:"AlreadyInitialized"},
-  2: {message:"NotInitialized"},
-  3: {message:"OfferClosed"},
-  4: {message:"OfferOpen"},
-  5: {message:"BelowMinimum"},
-  6: {message:"NotWholeShares"},
-  7: {message:"AlreadyFinalized"},
-  8: {message:"NotFinalized"},
-  9: {message:"AlreadyClaimed"},
-  10: {message:"InsufficientShares"},
-  11: {message:"GraceNotElapsed"},
-  12: {message:"NothingToClaim"},
-  13: {message:"Unauthorized"}
-}
-
+  1: { message: "AlreadyInitialized" },
+  2: { message: "NotInitialized" },
+  3: { message: "OfferClosed" },
+  4: { message: "OfferOpen" },
+  5: { message: "BelowMinimum" },
+  6: { message: "NotWholeShares" },
+  7: { message: "AlreadyFinalized" },
+  8: { message: "NotFinalized" },
+  9: { message: "AlreadyClaimed" },
+  10: { message: "InsufficientShares" },
+  11: { message: "GraceNotElapsed" },
+  12: { message: "NothingToClaim" },
+  13: { message: "Unauthorized" },
+};
 
 export interface Offer {
   admin: string;
@@ -63,63 +59,107 @@ export interface Offer {
   usdc: string;
 }
 
-export type DataKey = {tag: "Offer", values: void} | {tag: "Sub", values: readonly [string]} | {tag: "Claimed", values: readonly [string]} | {tag: "Proceeds", values: void};
-
-
-
-
+export type DataKey =
+  | { tag: "Offer"; values: void }
+  | { tag: "Sub"; values: readonly [string] }
+  | { tag: "Claimed"; values: readonly [string] }
+  | { tag: "Proceeds"; values: void };
 
 export interface Client {
   /**
    * Construct and simulate a init transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    */
-  init: ({admin, usdc, share, price, min_shares, close_ledger, grace_ledgers}: {admin: string, usdc: string, share: string, price: i128, min_shares: i128, close_ledger: u32, grace_ledgers: u32}, options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
+  init: (
+    {
+      admin,
+      usdc,
+      share,
+      price,
+      min_shares,
+      close_ledger,
+      grace_ledgers,
+    }: {
+      admin: string;
+      usdc: string;
+      share: string;
+      price: i128;
+      min_shares: i128;
+      close_ledger: u32;
+      grace_ledgers: u32;
+    },
+    options?: MethodOptions,
+  ) => Promise<AssembledTransaction<Result<void>>>;
 
   /**
    * Construct and simulate a claim transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    */
-  claim: ({subscriber}: {subscriber: string}, options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
+  claim: (
+    { subscriber }: { subscriber: string },
+    options?: MethodOptions,
+  ) => Promise<AssembledTransaction<Result<void>>>;
 
   /**
    * Construct and simulate a refund transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    */
-  refund: ({subscriber}: {subscriber: string}, options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
+  refund: (
+    { subscriber }: { subscriber: string },
+    options?: MethodOptions,
+  ) => Promise<AssembledTransaction<Result<void>>>;
 
   /**
    * Construct and simulate a finalize transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    */
-  finalize: ({admin, allotment_bps}: {admin: string, allotment_bps: u32}, options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
+  finalize: (
+    { admin, allotment_bps }: { admin: string; allotment_bps: u32 },
+    options?: MethodOptions,
+  ) => Promise<AssembledTransaction<Result<void>>>;
 
   /**
    * Construct and simulate a get_offer transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    */
-  get_offer: (options?: MethodOptions) => Promise<AssembledTransaction<Result<Offer>>>
+  get_offer: (
+    options?: MethodOptions,
+  ) => Promise<AssembledTransaction<Result<Offer>>>;
 
   /**
    * Construct and simulate a subscribe transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    */
-  subscribe: ({subscriber, shares}: {subscriber: string, shares: i128}, options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
+  subscribe: (
+    { subscriber, shares }: { subscriber: string; shares: i128 },
+    options?: MethodOptions,
+  ) => Promise<AssembledTransaction<Result<void>>>;
 
   /**
    * Construct and simulate a has_claimed transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    */
-  has_claimed: ({subscriber}: {subscriber: string}, options?: MethodOptions) => Promise<AssembledTransaction<boolean>>
+  has_claimed: (
+    { subscriber }: { subscriber: string },
+    options?: MethodOptions,
+  ) => Promise<AssembledTransaction<boolean>>;
 
   /**
    * Construct and simulate a deposit_shares transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    */
-  deposit_shares: ({admin, amount}: {admin: string, amount: i128}, options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
+  deposit_shares: (
+    { admin, amount }: { admin: string; amount: i128 },
+    options?: MethodOptions,
+  ) => Promise<AssembledTransaction<Result<void>>>;
 
   /**
    * Construct and simulate a get_subscription transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    */
-  get_subscription: ({subscriber}: {subscriber: string}, options?: MethodOptions) => Promise<AssembledTransaction<i128>>
+  get_subscription: (
+    { subscriber }: { subscriber: string },
+    options?: MethodOptions,
+  ) => Promise<AssembledTransaction<i128>>;
 
   /**
    * Construct and simulate a withdraw_proceeds transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    */
-  withdraw_proceeds: ({admin, to}: {admin: string, to: string}, options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
-
+  withdraw_proceeds: (
+    { admin, to }: { admin: string; to: string },
+    options?: MethodOptions,
+  ) => Promise<AssembledTransaction<Result<void>>>;
 }
 export class Client extends ContractClient {
   static async deploy<T = Client>(
@@ -132,13 +172,14 @@ export class Client extends ContractClient {
         salt?: Buffer | Uint8Array;
         /** The format used to decode `wasmHash`, if it's provided as a string. */
         format?: "hex" | "base64";
-      }
+      },
   ): Promise<AssembledTransaction<T>> {
-    return ContractClient.deploy(null, options)
+    return ContractClient.deploy(null, options);
   }
   constructor(public readonly options: ContractClientOptions) {
     super(
-      new ContractSpec([ "AAAABAAAAAAAAAAAAAAABUVycm9yAAAAAAAADQAAAAAAAAASQWxyZWFkeUluaXRpYWxpemVkAAAAAAABAAAAAAAAAA5Ob3RJbml0aWFsaXplZAAAAAAAAgAAAAAAAAALT2ZmZXJDbG9zZWQAAAAAAwAAAAAAAAAJT2ZmZXJPcGVuAAAAAAAABAAAAAAAAAAMQmVsb3dNaW5pbXVtAAAABQAAAAAAAAAOTm90V2hvbGVTaGFyZXMAAAAAAAYAAAAAAAAAEEFscmVhZHlGaW5hbGl6ZWQAAAAHAAAAAAAAAAxOb3RGaW5hbGl6ZWQAAAAIAAAAAAAAAA5BbHJlYWR5Q2xhaW1lZAAAAAAACQAAAAAAAAASSW5zdWZmaWNpZW50U2hhcmVzAAAAAAAKAAAAAAAAAA9HcmFjZU5vdEVsYXBzZWQAAAAACwAAAAAAAAAOTm90aGluZ1RvQ2xhaW0AAAAAAAwAAAAAAAAADFVuYXV0aG9yaXplZAAAAA0=",
+      new ContractSpec([
+        "AAAABAAAAAAAAAAAAAAABUVycm9yAAAAAAAADQAAAAAAAAASQWxyZWFkeUluaXRpYWxpemVkAAAAAAABAAAAAAAAAA5Ob3RJbml0aWFsaXplZAAAAAAAAgAAAAAAAAALT2ZmZXJDbG9zZWQAAAAAAwAAAAAAAAAJT2ZmZXJPcGVuAAAAAAAABAAAAAAAAAAMQmVsb3dNaW5pbXVtAAAABQAAAAAAAAAOTm90V2hvbGVTaGFyZXMAAAAAAAYAAAAAAAAAEEFscmVhZHlGaW5hbGl6ZWQAAAAHAAAAAAAAAAxOb3RGaW5hbGl6ZWQAAAAIAAAAAAAAAA5BbHJlYWR5Q2xhaW1lZAAAAAAACQAAAAAAAAASSW5zdWZmaWNpZW50U2hhcmVzAAAAAAAKAAAAAAAAAA9HcmFjZU5vdEVsYXBzZWQAAAAACwAAAAAAAAAOTm90aGluZ1RvQ2xhaW0AAAAAAAwAAAAAAAAADFVuYXV0aG9yaXplZAAAAA0=",
         "AAAAAQAAAAAAAAAAAAAABU9mZmVyAAAAAAAACgAAAAAAAAAFYWRtaW4AAAAAAAATAAAAAAAAAA1hbGxvdG1lbnRfYnBzAAAAAAAABAAAAAAAAAAMY2xvc2VfbGVkZ2VyAAAABAAAAAAAAAAJZmluYWxpemVkAAAAAAAAAQAAAAAAAAANZ3JhY2VfbGVkZ2VycwAAAAAAAAQAAAAAAAAACm1pbl9zaGFyZXMAAAAAAAsAAAAAAAAABXByaWNlAAAAAAAACwAAAAAAAAAFc2hhcmUAAAAAAAATAAAAAAAAAAx0b3RhbF9zaGFyZXMAAAALAAAAAAAAAAR1c2RjAAAAEw==",
         "AAAAAgAAAAAAAAAAAAAAB0RhdGFLZXkAAAAABAAAAAAAAAAAAAAABU9mZmVyAAAAAAAAAQAAAAAAAAADU3ViAAAAAAEAAAATAAAAAQAAAAAAAAAHQ2xhaW1lZAAAAAABAAAAEwAAAAAAAAAAAAAACFByb2NlZWRz",
         "AAAABQAAAAAAAAAAAAAACkNsYWltRXZlbnQAAAAAAAEAAAALY2xhaW1fZXZlbnQAAAAAAwAAAAAAAAAKc3Vic2NyaWJlcgAAAAAAEwAAAAEAAAAAAAAACGFsbG90dGVkAAAACwAAAAAAAAAAAAAAC3JlZnVuZF91c2RjAAAAAAsAAAAAAAAAAg==",
@@ -154,20 +195,21 @@ export class Client extends ContractClient {
         "AAAAAAAAAAAAAAALaGFzX2NsYWltZWQAAAAAAQAAAAAAAAAKc3Vic2NyaWJlcgAAAAAAEwAAAAEAAAAB",
         "AAAAAAAAAAAAAAAOZGVwb3NpdF9zaGFyZXMAAAAAAAIAAAAAAAAABWFkbWluAAAAAAAAEwAAAAAAAAAGYW1vdW50AAAAAAALAAAAAQAAA+kAAAACAAAAAw==",
         "AAAAAAAAAAAAAAAQZ2V0X3N1YnNjcmlwdGlvbgAAAAEAAAAAAAAACnN1YnNjcmliZXIAAAAAABMAAAABAAAACw==",
-        "AAAAAAAAAAAAAAARd2l0aGRyYXdfcHJvY2VlZHMAAAAAAAACAAAAAAAAAAVhZG1pbgAAAAAAABMAAAAAAAAAAnRvAAAAAAATAAAAAQAAA+kAAAACAAAAAw==" ]),
-      options
-    )
+        "AAAAAAAAAAAAAAARd2l0aGRyYXdfcHJvY2VlZHMAAAAAAAACAAAAAAAAAAVhZG1pbgAAAAAAABMAAAAAAAAAAnRvAAAAAAATAAAAAQAAA+kAAAACAAAAAw==",
+      ]),
+      options,
+    );
   }
   public readonly fromJSON = {
     init: this.txFromJSON<Result<void>>,
-        claim: this.txFromJSON<Result<void>>,
-        refund: this.txFromJSON<Result<void>>,
-        finalize: this.txFromJSON<Result<void>>,
-        get_offer: this.txFromJSON<Result<Offer>>,
-        subscribe: this.txFromJSON<Result<void>>,
-        has_claimed: this.txFromJSON<boolean>,
-        deposit_shares: this.txFromJSON<Result<void>>,
-        get_subscription: this.txFromJSON<i128>,
-        withdraw_proceeds: this.txFromJSON<Result<void>>
-  }
+    claim: this.txFromJSON<Result<void>>,
+    refund: this.txFromJSON<Result<void>>,
+    finalize: this.txFromJSON<Result<void>>,
+    get_offer: this.txFromJSON<Result<Offer>>,
+    subscribe: this.txFromJSON<Result<void>>,
+    has_claimed: this.txFromJSON<boolean>,
+    deposit_shares: this.txFromJSON<Result<void>>,
+    get_subscription: this.txFromJSON<i128>,
+    withdraw_proceeds: this.txFromJSON<Result<void>>,
+  };
 }
