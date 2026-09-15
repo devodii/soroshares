@@ -1,0 +1,22 @@
+{
+  "name": "soroshares-scripts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup-accounts": "tsx 01-setup-accounts.ts",
+    "issue-dpri": "tsx 02-issue-dpri.ts",
+    "deploy-contract": "tsx 03-deploy-contract.ts",
+    "fund-contract-shares": "tsx 04-fund-contract-shares.ts",
+    "print-env": "tsx 99-print-env.ts"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "^17.1.0",
+    "dotenv": "^17.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.5.1",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  }
+}
