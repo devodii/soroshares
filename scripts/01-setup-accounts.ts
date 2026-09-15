@@ -1,15 +1,7 @@
-import { Horizon, Keypair } from "@stellar/stellar-sdk";
-import { FRIENDBOT_URL, HORIZON_URL } from "./lib/config.js";
+import { Keypair } from "@stellar/stellar-sdk";
+import { fund } from "./lib/friendbot.js";
+import { horizon } from "./lib/horizon.js";
 import { KeyEntry, loadKeys, saveKeys } from "./lib/keys.js";
-
-const horizon = new Horizon.Server(HORIZON_URL);
-
-async function fund(publicKey: string): Promise<void> {
-  const res = await fetch(`${FRIENDBOT_URL}?addr=${publicKey}`);
-  if (!res.ok) {
-    throw new Error(`friendbot funding failed for ${publicKey}: ${await res.text()}`);
-  }
-}
 
 async function ensureAccount(name: string): Promise<KeyEntry> {
   const keys = loadKeys();
