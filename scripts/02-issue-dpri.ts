@@ -10,6 +10,7 @@ import { deployStellarAssetContract } from "./lib/cli.js";
 import { fund } from "./lib/friendbot.js";
 import { horizon, submit } from "./lib/horizon.js";
 import { KeyEntry, loadKeys, saveKeys } from "./lib/keys.js";
+import { findTrustline } from "./lib/trustline.js";
 
 const DPRI_SUPPLY = "1000000";
 const USDC_TESTNET_ISSUER = "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5";
@@ -31,13 +32,6 @@ async function ensureMockUsdcIssuer(): Promise<KeyEntry> {
   const entry: KeyEntry = { publicKey: kp.publicKey(), secretKey: kp.secret() };
   saveKeys({ mockUsdcIssuer: entry });
   return entry;
-}
-
-function findTrustline(balances: Awaited<ReturnType<typeof horizon.loadAccount>>["balances"], asset: Asset) {
-  return balances.find(
-    (b): b is Extract<typeof b, { asset_code: string; asset_issuer: string }> =>
-      "asset_code" in b && b.asset_code === asset.getCode() && b.asset_issuer === asset.getIssuer(),
-  );
 }
 
 async function main(): Promise<void> {
