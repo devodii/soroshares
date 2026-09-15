@@ -1,0 +1,9 @@
+node_modules
+.pnpm
+target
+test_snapshots
+.next
+dist
+pnpm-lock.yaml
+scripts/.keys.json
+apps/contract-client/src/index.ts

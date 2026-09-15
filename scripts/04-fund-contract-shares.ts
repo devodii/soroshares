@@ -84,7 +84,11 @@ async function main(): Promise<void> {
   } else {
     console.log(`distributor paying ${DEPOSIT_SHARES_WHOLE} DPRI to admin`);
     await submit(distributor.secretKey, [
-      Operation.payment({ destination: admin.publicKey, asset: dpri, amount: DEPOSIT_SHARES_WHOLE }),
+      Operation.payment({
+        destination: admin.publicKey,
+        asset: dpri,
+        amount: DEPOSIT_SHARES_WHOLE,
+      }),
     ]);
   }
 

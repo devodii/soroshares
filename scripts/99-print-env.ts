@@ -6,7 +6,9 @@ import { KeyEntry, loadKeys, saveKeys } from "./lib/keys.js";
 function requireKey(name: string): KeyEntry {
   const entry = loadKeys()[name];
   if (!entry || typeof entry !== "object") {
-    throw new Error(`missing ${name} — run 01-setup-accounts.ts through 04-fund-contract-shares.ts first`);
+    throw new Error(
+      `missing ${name} — run 01-setup-accounts.ts through 04-fund-contract-shares.ts first`,
+    );
   }
   return entry;
 }

@@ -2,7 +2,15 @@ import { execFile } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { BASE_FEE, contract, hash, Keypair, Operation, rpc, TransactionBuilder } from "@stellar/stellar-sdk";
+import {
+  BASE_FEE,
+  contract,
+  hash,
+  Keypair,
+  Operation,
+  rpc,
+  TransactionBuilder,
+} from "@stellar/stellar-sdk";
 import { NETWORK_PASSPHRASE, RPC_URL } from "./lib/config.js";
 import { KeyEntry, loadKeys, saveKeys } from "./lib/keys.js";
 
