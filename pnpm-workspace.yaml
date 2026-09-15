@@ -1,0 +1,12 @@
+packages:
+  - apps/*
+  - scripts
+allowBuilds:
+  "@reown/appkit": true
+  bufferutil: true
+  esbuild: true
+  secp256k1: true
+  unrs-resolver: true
+  utf-8-validate: true
+minimumReleaseAgeExclude:
+  - "@stellar/stellar-sdk@17.1.0"
