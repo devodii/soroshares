@@ -8,6 +8,7 @@
     "issue-dpri": "tsx 02-issue-dpri.ts",
     "deploy-contract": "tsx 03-deploy-contract.ts",
     "fund-contract-shares": "tsx 04-fund-contract-shares.ts",
+    "bindings": "bash 05-bindings.sh",
     "print-env": "tsx 99-print-env.ts"
   },
   "dependencies": {
