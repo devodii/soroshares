@@ -1,5 +1,4 @@
 import { ActivityFeed } from "@/components/activity-feed";
-import { HowItWorks } from "@/components/how-it-works";
 import { OfferPanel } from "@/components/offer-panel";
 import { ClaimStep } from "@/components/steps/claim";
 import { ConnectWalletStep } from "@/components/steps/connect-wallet";
@@ -17,8 +16,6 @@ export default function Home() {
           Modeled on the Dangote Petroleum Refinery IPO terms. Testnet only. Not affiliated.
         </p>
       </header>
-
-      <HowItWorks />
 
       <OfferPanel />
 
