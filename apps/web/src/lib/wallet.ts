@@ -36,15 +36,10 @@ export async function connect(): Promise<{ address: string; walletId: string }> 
   return { address, walletId: StellarWalletsKit.selectedModule.productId };
 }
 
-/** Re-selects a previously connected wallet module and re-fetches its address, for restoring a session after a page refresh. */
-export async function restore(walletId: string): Promise<string | null> {
+// No fetchAddress() here: some extensions (Lobstr) prompt on every call.
+export function selectWallet(walletId: string): void {
   ensureInitialized(walletId);
-  try {
-    const { address } = await StellarWalletsKit.fetchAddress();
-    return address;
-  } catch {
-    return null;
-  }
+  StellarWalletsKit.setWallet(walletId);
 }
 
 export async function disconnect(): Promise<void> {

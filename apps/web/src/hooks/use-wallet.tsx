@@ -8,7 +8,6 @@ import * as wallet from "@/lib/wallet";
 interface WalletContextValue {
   address: string | null;
   connecting: boolean;
-  restoring: boolean;
   token: string | null;
   signingIn: boolean;
   connect: () => Promise<void>;
@@ -28,25 +27,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     path: "/",
   });
   const [connecting, setConnecting] = React.useState(false);
-  const [restoring, setRestoring] = React.useState(false);
   const [signingIn, setSigningIn] = React.useState(false);
   const restoreAttempted = React.useRef(false);
 
   React.useEffect(() => {
     if (restoreAttempted.current || !walletId) return;
     restoreAttempted.current = true;
-    setRestoring(true);
-    wallet
-      .restore(walletId)
-      .then((restoredAddress) => {
-        if (!restoredAddress) {
-          setAddress(null);
-          setWalletId(null);
-          setToken(null);
-        }
-      })
-      .finally(() => setRestoring(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    wallet.selectWallet(walletId);
   }, [walletId]);
 
   const connect = React.useCallback(async () => {
@@ -108,7 +95,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       value={{
         address,
         connecting,
-        restoring,
         token,
         signingIn,
         connect,
