@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import * as React from "react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,8 @@ import { ADMIN_PUBLIC } from "@/lib/env";
 export function AdminPanel() {
   const { address, connecting, connect, signTransaction, signAuthEntry } = useWallet();
   const { data: offer, refetch } = useOffer();
-  const [allotmentPct, setAllotmentPct] = useState(60);
-  const [submitting, setSubmitting] = useState(false);
+  const [allotmentPct, setAllotmentPct] = React.useState(60);
+  const [submitting, setSubmitting] = React.useState(false);
 
   const isAdmin = address === ADMIN_PUBLIC;
 

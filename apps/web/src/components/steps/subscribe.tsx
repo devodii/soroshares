@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import * as React from "react";
 import { toast } from "sonner";
 import { PressHoldButton } from "@/components/press-hold-button";
 import { Input } from "@/components/ui/input";
@@ -23,11 +23,13 @@ export function SubscribeStep() {
   const { data: offer, refetch: refetchOffer } = useOffer();
   const { data: latestLedger } = useLatestLedger();
 
-  const [shares, setShares] = useState(10);
-  const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<{ txHash: string; shares: number; usdc: string } | null>(
-    null,
-  );
+  const [shares, setShares] = React.useState(10);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [result, setResult] = React.useState<{
+    txHash: string;
+    shares: number;
+    usdc: string;
+  } | null>(null);
 
   const kycAccepted = kyc?.status === "ACCEPTED";
   const trustlineAuthorized = account?.dpriAuthorized ?? false;

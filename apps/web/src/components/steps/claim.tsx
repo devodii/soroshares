@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StepCard, StepStatus } from "@/components/step-card";
@@ -17,8 +17,10 @@ export function ClaimStep() {
   const { data: offer, refetch: refetchOffer } = useOffer();
   const { data: latestLedger } = useLatestLedger();
   const { data: subscription, refetch: refetchSubscription } = useSubscription(address);
-  const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<{ kind: "claim" | "refund"; txHash: string } | null>(null);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [result, setResult] = React.useState<{ kind: "claim" | "refund"; txHash: string } | null>(
+    null,
+  );
 
   const hasSubscription = Boolean(subscription && subscription.shares > 0n);
   const closed = Boolean(latestLedger && offer && latestLedger >= offer.close_ledger);

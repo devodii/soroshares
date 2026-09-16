@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 
 export function AdminLoginForm() {
   const router = useRouter();
-  const [password, setPassword] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [password, setPassword] = React.useState("");
+  const [submitting, setSubmitting] = React.useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -1,7 +1,7 @@
 "use client";
 
 import { Asset, Operation } from "@stellar/stellar-sdk";
-import { useState } from "react";
+import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StepCard, StepStatus } from "@/components/step-card";
@@ -13,8 +13,8 @@ import { DPRI_ISSUER } from "@/lib/env";
 export function TrustlineStep() {
   const { address, signTransaction } = useWallet();
   const { data: account, refetch } = useAccount(address);
-  const [submitting, setSubmitting] = useState(false);
-  const [txHash, setTxHash] = useState<string | null>(null);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [txHash, setTxHash] = React.useState<string | null>(null);
 
   const hasTrustline = account ? account.dpri !== "0" || account.dpriAuthorized : false;
   const status: StepStatus = !address ? "pending" : hasTrustline ? "done" : "active";

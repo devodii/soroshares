@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState } from "react";
+import * as React from "react";
 import * as wallet from "@/lib/wallet";
 
 interface WalletContextValue {
@@ -15,15 +15,15 @@ interface WalletContextValue {
   signAuthEntry: (entryXdr: string) => Promise<string>;
 }
 
-const WalletContext = createContext<WalletContextValue | null>(null);
+const WalletContext = React.createContext<WalletContextValue | null>(null);
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
-  const [address, setAddress] = useState<string | null>(null);
-  const [connecting, setConnecting] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
-  const [signingIn, setSigningIn] = useState(false);
+  const [address, setAddress] = React.useState<string | null>(null);
+  const [connecting, setConnecting] = React.useState(false);
+  const [token, setToken] = React.useState<string | null>(null);
+  const [signingIn, setSigningIn] = React.useState(false);
 
-  const connect = useCallback(async () => {
+  const connect = React.useCallback(async () => {
     setConnecting(true);
     try {
       const connected = await wallet.connect();
@@ -34,13 +34,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const disconnect = useCallback(async () => {
+  const disconnect = React.useCallback(async () => {
     await wallet.disconnect();
     setAddress(null);
     setToken(null);
   }, []);
 
-  const signIn = useCallback(async () => {
+  const signIn = React.useCallback(async () => {
     if (!address) throw new Error("connect a wallet first");
     setSigningIn(true);
     try {
@@ -64,7 +64,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   }, [address]);
 
-  const signTransaction = useCallback(
+  const signTransaction = React.useCallback(
     async (xdr: string) => {
       if (!address) throw new Error("connect a wallet first");
       return wallet.signTransaction(xdr, address);
@@ -72,7 +72,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     [address],
   );
 
-  const signAuthEntry = useCallback(
+  const signAuthEntry = React.useCallback(
     async (entryXdr: string) => {
       if (!address) throw new Error("connect a wallet first");
       return wallet.signAuthEntry(entryXdr, address);
@@ -100,7 +100,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useWallet(): WalletContextValue {
-  const ctx = useContext(WalletContext);
+  const ctx = React.useContext(WalletContext);
   if (!ctx) throw new Error("useWallet must be used within a WalletProvider");
   return ctx;
 }
