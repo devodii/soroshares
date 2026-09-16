@@ -1,5 +1,5 @@
 import "server-only";
-import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
 
 export interface KvStore<T> {
   get(key: string): Promise<T | undefined>;
@@ -8,24 +8,36 @@ export interface KvStore<T> {
   all(): Promise<Record<string, T>>;
 }
 
+let client: Redis | undefined;
+
+function getClient(): Redis {
+  if (!client) {
+    client = new Redis({
+      url: process.env.KV_REST_API_URL!,
+      token: process.env.KV_REST_API_TOKEN!,
+    });
+  }
+  return client;
+}
+
 export function createRedisStore<T>(name: string): KvStore<T> {
   const key = (id: string) => `soroshares:${name}:${id}`;
 
   return {
     async get(id) {
-      const value = await kv.get<T>(key(id));
+      const value = await getClient().get<T>(key(id));
       return value ?? undefined;
     },
     async set(id, value) {
-      await kv.set(key(id), value);
+      await getClient().set(key(id), value);
     },
     async delete(id) {
-      await kv.del(key(id));
+      await getClient().del(key(id));
     },
     async all() {
-      const keys = await kv.keys(`soroshares:${name}:*`);
+      const keys = await getClient().keys(`soroshares:${name}:*`);
       if (keys.length === 0) return {};
-      const values = await kv.mget<T[]>(...keys);
+      const values = await getClient().mget<T[]>(...keys);
       const prefix = `soroshares:${name}:`;
       const result: Record<string, T> = {};
       keys.forEach((k, i) => {

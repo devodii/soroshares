@@ -44,9 +44,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.102.8
         version: 5.102.8(react@19.2.8)
-      '@vercel/kv':
-        specifier: ^3.0.0
-        version: 3.0.0
+      '@upstash/redis':
+        specifier: ^1.38.4
+        version: 1.38.4
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -7507,6 +7507,7 @@ snapshots:
   '@vercel/kv@3.0.0':
     dependencies:
       '@upstash/redis': 1.38.4
+    optional: true
 
   '@wallet-standard/base@1.1.1': {}
 
