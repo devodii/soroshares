@@ -14,7 +14,6 @@ export class ApiError extends Error {
   }
 }
 
-/** Resolves the SEP-10-authenticated account from a request's Bearer token, or throws a 401. */
 export async function requireBearerAccount(req: NextRequest): Promise<string> {
   try {
     return await verifyToken(bearerToken(req.headers.get("authorization")));
@@ -76,9 +75,8 @@ export interface HandlerConfig<TBody, TQuery> {
     body?: z.ZodType<TBody>;
     query?: z.ZodType<TQuery>;
   };
-  /** Require a valid admin session cookie. */
   auth?: "admin";
-  /** Requests per minute per client IP + route. Default 30. */
+  /** Requests per minute per client IP + route. */
   rateLimit?: number;
   handler: (args: HandlerArgs<TBody, TQuery>) => Promise<unknown>;
 }
@@ -147,8 +145,7 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
 
       const result = await config.handler({ body, query, req });
 
-      // A handler that needs a non-JSON response (e.g. text/plain) returns a
-      // Response directly instead of a plain value; we don't cache those.
+      // A Response means the handler wants a non-JSON reply (e.g. stellar.toml); skip caching it.
       if (result instanceof Response) return result;
 
       if (isIdempotent && idempotencyKey) {

@@ -2,13 +2,9 @@ import { Asset, BASE_FEE, Keypair, Operation, TransactionBuilder, rpc } from "@s
 import { NETWORK_PASSPHRASE } from "@/lib/env";
 import { getErrorMessage } from "@/lib/error-message";
 
-/**
- * Wraps a classic asset into its Stellar Asset Contract via pure RPC + SDK
- * calls — no `stellar` CLI, so this runs anywhere Node runs, Vercel included.
- * SAC addresses are deterministic, so if another account already wrapped this
- * asset (very likely for a well-known asset like testnet USDC), this falls
- * back to the computed address instead of failing.
- */
+// SAC addresses are deterministic, so if another account already wrapped this
+// asset (likely for a well-known one like testnet USDC), we fall back to the
+// computed address instead of failing.
 export async function ensureStellarAssetContract(
   rpcServer: rpc.Server,
   asset: Asset,
@@ -19,9 +15,7 @@ export async function ensureStellarAssetContract(
   try {
     await rpcServer.getContractInstance(expectedId);
     return expectedId;
-  } catch {
-    // not yet instantiated, deploy below
-  }
+  } catch {}
 
   const account = await rpcServer.getAccount(sourceKeypair.publicKey());
   const tx = new TransactionBuilder(account, {

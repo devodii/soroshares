@@ -43,7 +43,6 @@ interface TokenAdminClient {
 export interface RunBootstrapOptions {
   closeWindowDays?: number;
   graceDays?: number;
-  /** Deploy a fresh contract instance even if one is already cached. */
   redeploy?: boolean;
 }
 

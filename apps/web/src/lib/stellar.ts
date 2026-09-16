@@ -4,7 +4,6 @@ import { NETWORK_PASSPHRASE, HORIZON_URL, RPC_URL } from "./env";
 export const horizonServer = new Horizon.Server(HORIZON_URL);
 export const rpcServer = new rpc.Server(RPC_URL);
 
-/** Server-side classic transaction submission, signed with a Keypair we hold (not a wallet). */
 export async function submitWithKeypair(
   sourceKeypair: Keypair,
   operations: xdr.Operation[],

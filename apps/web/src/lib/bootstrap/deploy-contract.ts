@@ -10,9 +10,7 @@ async function ensureWasmInstalled(rpcServer: rpc.Server, keypair: Keypair): Pro
   try {
     await rpcServer.getContractWasmByHash(wasmHash);
     return wasmHash;
-  } catch {
-    // not found, upload below
-  }
+  } catch {}
 
   const account = await rpcServer.getAccount(keypair.publicKey());
   const tx = new TransactionBuilder(account, {

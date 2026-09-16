@@ -38,18 +38,9 @@ function persist(name: string, cache: Map<string, unknown>): void {
   writeFileSync(filePath(name), JSON.stringify(Object.fromEntries(cache), null, 2));
 }
 
-/**
- * A small JSON-file-backed key/value store: in-memory with a synchronous disk
- * fallback, no database. Enough persistence for a low-traffic demo server on
- * a single long-lived instance (local dev, or a small persistent host).
- *
- * On serverless platforms (Vercel included) each cold start gets its own
- * filesystem with no cross-instance sharing, so anything built on this
- * (rate limits, idempotency, bootstrap cache) is best-effort under
- * concurrency, not a correctness guarantee. Bootstrap operations always
- * re-check actual on-chain state before acting, so they stay correct even
- * if this cache is empty or stale.
- */
+// On serverless, each cold start gets its own filesystem, so this is best-effort
+// under concurrency, not a correctness guarantee. Bootstrap re-checks on-chain
+// state before acting, so it stays correct even if this cache is stale.
 export function createDiskStore<T>(name: string): DiskStore<T> {
   return {
     get(key) {

@@ -3,11 +3,7 @@ function requirePublic(name: string, value: string | undefined): string {
   return value;
 }
 
-/**
- * Bootstrap-derived values (asset/contract addresses) don't exist until
- * POST /api/admin/bootstrap has run once, so the app must still start
- * without them — throwing here would make /admin itself unreachable.
- */
+// Unlike requirePublic, doesn't throw: these are unset until bootstrap runs once.
 function optionalPublic(value: string | undefined): string {
   return value ?? "";
 }
