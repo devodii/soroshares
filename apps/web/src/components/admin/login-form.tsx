@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { apiFetch } from "@/lib/api-client";
 
 export function AdminLoginForm() {
   const router = useRouter();
@@ -17,12 +18,11 @@ export function AdminLoginForm() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch("/api/admin/login", {
+      await apiFetch("/api/admin/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ password }),
       });
-      if (!res.ok) throw new Error((await res.json()).error ?? "login failed");
       router.refresh();
     } catch (err) {
       toast.error("Login failed", {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiErrorMessage, apiFetch } from "@/lib/api-client";
 
 export type KycStatus = "ACCEPTED" | "REJECTED" | "NEEDS_INFO";
 
@@ -33,8 +34,9 @@ export function useKycStatus(token: string | null) {
         headers: { authorization: `Bearer ${token}` },
       });
       if (res.status === 404) return null;
-      if (!res.ok) throw new Error((await res.json()).error ?? "failed to load KYC status");
-      return res.json();
+      const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(apiErrorMessage(json, "failed to load KYC status"));
+      return json;
     },
     enabled: Boolean(token),
   });
@@ -45,13 +47,11 @@ export function useSubmitKyc(token: string | null) {
   return useMutation({
     mutationFn: async (submission: KycSubmission): Promise<KycRecord> => {
       if (!token) throw new Error("sign in first");
-      const res = await fetch("/api/kyc/customer", {
+      return apiFetch<KycRecord>("/api/kyc/customer", {
         method: "PUT",
         headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
         body: JSON.stringify(submission),
       });
-      if (!res.ok) throw new Error((await res.json()).error ?? "KYC submission failed");
-      return res.json();
     },
     onSuccess: (record) => {
       queryClient.setQueryData(["kyc", token], record);

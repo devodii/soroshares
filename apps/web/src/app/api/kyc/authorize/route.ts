@@ -1,21 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { ApiError, apiHandler, requireBearerAccount } from "@/lib/api-handler";
 import { authorizeDpriTrustline } from "@/lib/authorize-trustline";
-import { bearerToken, verifyToken } from "@/lib/jwt";
 import { getKyc } from "@/lib/kyc-store";
 
-export async function POST(req: NextRequest): Promise<NextResponse> {
-  let account: string;
-  try {
-    account = await verifyToken(bearerToken(req.headers.get("authorization")));
-  } catch {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
-
-  const record = getKyc(account);
-  if (record?.status !== "ACCEPTED") {
-    return NextResponse.json({ error: "kyc not accepted" }, { status: 400 });
-  }
-
-  const result = await authorizeDpriTrustline(account);
-  return NextResponse.json(result);
-}
+export const POST = apiHandler({
+  handler: async ({ req }) => {
+    const account = await requireBearerAccount(req);
+    const record = getKyc(account);
+    if (record?.status !== "ACCEPTED") {
+      throw new ApiError(400, "KYC_NOT_ACCEPTED", "kyc not accepted");
+    }
+    return authorizeDpriTrustline(account);
+  },
+});

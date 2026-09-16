@@ -1,18 +1,18 @@
 import { Client } from "@soroshares/contract-client";
-import { NextResponse } from "next/server";
+import { apiHandler } from "@/lib/api-handler";
 import { NETWORK_PASSPHRASE, OFFER_CONTRACT, RPC_URL } from "@/lib/env";
 
-export async function GET(): Promise<NextResponse> {
-  const client = new Client({
-    contractId: OFFER_CONTRACT,
-    networkPassphrase: NETWORK_PASSPHRASE,
-    rpcUrl: RPC_URL,
-  });
-
-  try {
+export const GET = apiHandler({
+  rateLimit: 60,
+  handler: async () => {
+    const client = new Client({
+      contractId: OFFER_CONTRACT,
+      networkPassphrase: NETWORK_PASSPHRASE,
+      rpcUrl: RPC_URL,
+    });
     const tx = await client.get_offer();
     const offer = tx.result.unwrap();
-    return NextResponse.json({
+    return {
       admin: offer.admin,
       usdc: offer.usdc,
       share: offer.share,
@@ -24,11 +24,6 @@ export async function GET(): Promise<NextResponse> {
       finalized: offer.finalized,
       allotment_bps: offer.allotment_bps,
       contract: OFFER_CONTRACT,
-    });
-  } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : String(err) },
-      { status: 500 },
-    );
-  }
-}
+    };
+  },
+});

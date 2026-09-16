@@ -1,20 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { ApiError, apiHandler } from "@/lib/api-handler";
 import { adminUiPassword } from "@/lib/env";
 import { issueAdminSession } from "@/lib/jwt";
 
-export async function POST(req: NextRequest): Promise<NextResponse> {
-  const body = await req.json().catch(() => null);
-  if (body?.password !== adminUiPassword()) {
-    return NextResponse.json({ error: "wrong password" }, { status: 401 });
-  }
+const loginBody = z.object({ password: z.string().min(1) });
 
-  const token = await issueAdminSession();
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set("admin_session", token, {
-    httpOnly: true,
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24,
-    path: "/",
-  });
-  return res;
-}
+export const POST = apiHandler({
+  rateLimit: 10,
+  schema: { body: loginBody },
+  handler: async ({ body }) => {
+    if (body.password !== adminUiPassword()) {
+      throw new ApiError(401, "UNAUTHORIZED", "wrong password");
+    }
+
+    const token = await issueAdminSession();
+    const res = NextResponse.json({ ok: true });
+    res.cookies.set("admin_session", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24,
+      path: "/",
+    });
+    return res;
+  },
+});

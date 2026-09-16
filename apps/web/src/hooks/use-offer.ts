@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api-client";
 
 export interface OfferState {
   admin: string;
@@ -16,16 +17,10 @@ export interface OfferState {
   contract: string;
 }
 
-async function fetchOffer(): Promise<OfferState> {
-  const res = await fetch("/api/offer");
-  if (!res.ok) throw new Error((await res.json()).error ?? "failed to load offer");
-  return res.json();
-}
-
 export function useOffer() {
   return useQuery({
     queryKey: ["offer"],
-    queryFn: fetchOffer,
+    queryFn: () => apiFetch<OfferState>("/api/offer"),
     refetchInterval: 5000,
   });
 }
