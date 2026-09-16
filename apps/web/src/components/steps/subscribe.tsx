@@ -1,8 +1,10 @@
 "use client";
 
+import { Asset, Operation } from "@stellar/stellar-sdk";
 import * as React from "react";
 import { toast } from "sonner";
 import { PressHoldButton } from "@/components/press-hold-button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StepCard, StepStatus } from "@/components/step-card";
@@ -11,8 +13,10 @@ import { useKycStatus } from "@/hooks/use-kyc";
 import { useLatestLedger } from "@/hooks/use-latest-ledger";
 import { useOffer } from "@/hooks/use-offer";
 import { useWallet } from "@/hooks/use-wallet";
+import { apiFetch } from "@/lib/api-client";
+import { buildSignSubmit } from "@/lib/classic-tx";
 import { getOfferClient } from "@/lib/contract";
-import { MIN_SHARES, PRICE_NGN, PRICE_USDC } from "@/lib/env";
+import { MIN_SHARES, PRICE_NGN, PRICE_USDC, USDC_ISSUER } from "@/lib/env";
 
 const STROOP = 10_000_000n;
 
@@ -25,6 +29,8 @@ export function SubscribeStep() {
 
   const [shares, setShares] = React.useState(10);
   const [submitting, setSubmitting] = React.useState(false);
+  const [addingTrustline, setAddingTrustline] = React.useState(false);
+  const [requestingFaucet, setRequestingFaucet] = React.useState(false);
   const [result, setResult] = React.useState<{
     txHash: string;
     shares: number;
@@ -35,6 +41,7 @@ export function SubscribeStep() {
   const trustlineAuthorized = account?.dpriAuthorized ?? false;
   const offerClosed = Boolean(latestLedger && offer && latestLedger >= offer.close_ledger);
   const cost = shares * PRICE_USDC;
+  const hasUsdcTrustline = account?.usdcTrustline ?? false;
   const insufficientUsdc = account ? Number(account.usdc) < cost : true;
 
   const canSubscribe =
@@ -42,6 +49,7 @@ export function SubscribeStep() {
     kycAccepted &&
     trustlineAuthorized &&
     !offerClosed &&
+    hasUsdcTrustline &&
     !insufficientUsdc &&
     shares >= 10;
 
@@ -53,8 +61,49 @@ export function SubscribeStep() {
     if (!trustlineAuthorized) return "Trustline not authorized";
     if (offerClosed) return "Offer closed";
     if (shares < 10) return "Minimum 10 shares";
+    if (!hasUsdcTrustline) return "No USDC trustline";
     if (insufficientUsdc) return "Insufficient USDC";
     return null;
+  }
+
+  async function handleAddUsdcTrustline() {
+    if (!address) return;
+    setAddingTrustline(true);
+    try {
+      await buildSignSubmit(
+        address,
+        [Operation.changeTrust({ asset: new Asset("USDC", USDC_ISSUER) })],
+        signTransaction,
+      );
+      toast.success("USDC trustline added");
+      refetchAccount();
+    } catch (err) {
+      toast.error("Add USDC trustline failed", {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setAddingTrustline(false);
+    }
+  }
+
+  async function handleGetTestUsdc() {
+    if (!address) return;
+    setRequestingFaucet(true);
+    try {
+      await apiFetch("/api/faucet/usdc", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ address }),
+      });
+      toast.success("Test USDC received");
+      refetchAccount();
+    } catch (err) {
+      toast.error("USDC faucet failed", {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setRequestingFaucet(false);
+    }
   }
 
   async function handleSubscribe() {
@@ -107,6 +156,18 @@ export function SubscribeStep() {
           </div>
           <div className="text-sm text-muted-foreground">Fee: 0</div>
           <div className="text-sm font-medium">Total: {cost.toFixed(2)} USDC</div>
+
+          {address && !hasUsdcTrustline && (
+            <Button variant="secondary" onClick={handleAddUsdcTrustline} disabled={addingTrustline}>
+              {addingTrustline ? "Adding…" : "Add USDC trustline"}
+            </Button>
+          )}
+          {address && hasUsdcTrustline && insufficientUsdc && (
+            <Button variant="secondary" onClick={handleGetTestUsdc} disabled={requestingFaucet}>
+              {requestingFaucet ? "Requesting…" : "Get test USDC"}
+            </Button>
+          )}
+
           <PressHoldButton onComplete={handleSubscribe} disabled={!canSubscribe || submitting}>
             {submitting ? "Submitting…" : "Press and hold to subscribe"}
           </PressHoldButton>

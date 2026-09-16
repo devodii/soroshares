@@ -10,6 +10,7 @@ export interface AccountBalances {
   exists: boolean;
   xlm: string;
   usdc: string;
+  usdcTrustline: boolean;
   dpri: string;
   dpriAuthorized: boolean;
 }
@@ -24,12 +25,20 @@ async function fetchAccount(address: string): Promise<AccountBalances> {
       exists: true,
       xlm: native?.balance ?? "0",
       usdc: usdc?.balance ?? "0",
+      usdcTrustline: Boolean(usdc),
       dpri: dpri?.balance ?? "0",
       dpriAuthorized: dpri?.is_authorized ?? false,
     };
   } catch (err) {
     if (err instanceof NotFoundError) {
-      return { exists: false, xlm: "0", usdc: "0", dpri: "0", dpriAuthorized: false };
+      return {
+        exists: false,
+        xlm: "0",
+        usdc: "0",
+        usdcTrustline: false,
+        dpri: "0",
+        dpriAuthorized: false,
+      };
     }
     throw err;
   }
