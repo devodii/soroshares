@@ -51,23 +51,26 @@ export function PressHoldButton({
     };
   }, [cancel, onComplete]);
 
-  const start = React.useCallback(() => {
-    if (disabled) return;
-    firedRef.current = false;
-    startRef.current = performance.now();
-    setHolding(true);
-    rafRef.current = requestAnimationFrame(() => tickRef.current());
-  }, [disabled]);
+  const start = React.useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>) => {
+      if (disabled) return;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      firedRef.current = false;
+      startRef.current = performance.now();
+      setHolding(true);
+      rafRef.current = requestAnimationFrame(() => tickRef.current());
+    },
+    [disabled],
+  );
 
   return (
     <div className={cn("space-y-2", className)}>
       <Button
         type="button"
         disabled={disabled}
-        className="w-full select-none"
+        className="w-full touch-none select-none"
         onPointerDown={start}
         onPointerUp={cancel}
-        onPointerLeave={cancel}
         onPointerCancel={cancel}
       >
         {children}
