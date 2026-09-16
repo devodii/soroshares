@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import { PressHoldButton } from "@/components/press-hold-button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StepCard, StepStatus } from "@/components/step-card";
@@ -112,9 +112,14 @@ export function SubscribeStep() {
           <div className="text-sm text-muted-foreground">Fee: 0</div>
           <div className="text-sm font-medium">Total: {cost.toFixed(2)} USDC</div>
 
-          <PressHoldButton onComplete={handleSubscribe} disabled={!canSubscribe || submitting}>
-            {submitting ? "Submitting…" : "Press and hold to subscribe"}
-          </PressHoldButton>
+          <Button
+            type="button"
+            className="w-full"
+            onClick={handleSubscribe}
+            disabled={!canSubscribe || submitting}
+          >
+            {submitting ? "Submitting…" : "Subscribe"}
+          </Button>
           {reason && <p className="text-xs text-muted-foreground">{reason}</p>}
         </div>
       )}
