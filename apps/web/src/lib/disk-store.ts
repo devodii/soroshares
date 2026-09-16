@@ -1,7 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
-const DATA_DIR = path.join(process.cwd(), ".data");
+// process.cwd() is read-only on Vercel; only os.tmpdir() is writable there.
+const DATA_DIR = path.join(os.tmpdir(), "soroshares-data");
 
 export interface DiskStore<T> {
   get(key: string): T | undefined;
