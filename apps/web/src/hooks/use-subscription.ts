@@ -1,6 +1,6 @@
 "use client";
 
-import { Client } from "contract-client";
+import { Client } from "@soroshares/contract-client";
 import { useQuery } from "@tanstack/react-query";
 import { NETWORK_PASSPHRASE, OFFER_CONTRACT, RPC_URL } from "@/lib/env";
 

@@ -1,6 +1,6 @@
 {
   "version": "0.0.0",
-  "name": "contract-client",
+  "name": "@soroshares/contract-client",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",

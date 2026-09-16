@@ -16,7 +16,7 @@
     "@tanstack/react-query": "^5.102.8",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.3.0",
-    "contract-client": "workspace:*",
+    "@soroshares/contract-client": "workspace:*",
     "jose": "^6.2.12",
     "lucide-react": "^1.46.0",
     "next": "16.3.5",
