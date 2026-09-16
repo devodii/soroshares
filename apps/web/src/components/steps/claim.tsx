@@ -9,6 +9,7 @@ import { useOffer } from "@/hooks/use-offer";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useWallet } from "@/hooks/use-wallet";
 import { getOfferClient } from "@/lib/contract";
+import { getErrorMessage } from "@/lib/error-message";
 
 const STROOP = 10_000_000n;
 
@@ -52,7 +53,7 @@ export function ClaimStep() {
       refetchSubscription();
     } catch (err) {
       toast.error("Claim failed", {
-        description: err instanceof Error ? err.message : String(err),
+        description: getErrorMessage(err),
       });
     } finally {
       setSubmitting(false);
@@ -73,7 +74,7 @@ export function ClaimStep() {
       refetchSubscription();
     } catch (err) {
       toast.error("Refund failed", {
-        description: err instanceof Error ? err.message : String(err),
+        description: getErrorMessage(err),
       });
     } finally {
       setSubmitting(false);

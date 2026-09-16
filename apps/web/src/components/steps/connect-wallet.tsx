@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { StepCard, StepStatus } from "@/components/step-card";
 import { useAccount } from "@/hooks/use-account";
 import { useWallet } from "@/hooks/use-wallet";
+import { getErrorMessage } from "@/lib/error-message";
 
 function truncate(address: string): string {
   return `${address.slice(0, 4)}…${address.slice(-4)}`;
@@ -21,7 +22,7 @@ export function ConnectWalletStep() {
       await connect();
     } catch (err) {
       toast.error("Connect failed", {
-        description: err instanceof Error ? err.message : String(err),
+        description: getErrorMessage(err),
       });
     }
   }
@@ -35,7 +36,7 @@ export function ConnectWalletStep() {
       refetch();
     } catch (err) {
       toast.error("Friendbot failed", {
-        description: err instanceof Error ? err.message : String(err),
+        description: getErrorMessage(err),
       });
     }
   }

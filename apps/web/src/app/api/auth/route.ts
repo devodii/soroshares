@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ApiError, apiHandler } from "@/lib/api-handler";
 import { NETWORK_PASSPHRASE } from "@/lib/env";
+import { getErrorMessage } from "@/lib/error-message";
 import { issueToken } from "@/lib/jwt";
 import { buildChallenge, verifyChallenge } from "@/lib/sep10";
 
@@ -17,7 +18,7 @@ export const GET = apiHandler({
       const transaction = buildChallenge(query.account);
       return { transaction, network_passphrase: NETWORK_PASSPHRASE };
     } catch (err) {
-      throw new ApiError(400, "CHALLENGE_FAILED", err instanceof Error ? err.message : String(err));
+      throw new ApiError(400, "CHALLENGE_FAILED", getErrorMessage(err));
     }
   },
 });
@@ -32,11 +33,7 @@ export const POST = apiHandler({
       const token = await issueToken(account);
       return { token };
     } catch (err) {
-      throw new ApiError(
-        400,
-        "VERIFICATION_FAILED",
-        err instanceof Error ? err.message : String(err),
-      );
+      throw new ApiError(400, "VERIFICATION_FAILED", getErrorMessage(err));
     }
   },
 });

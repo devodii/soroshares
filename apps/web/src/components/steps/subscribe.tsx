@@ -17,6 +17,7 @@ import { apiFetch } from "@/lib/api-client";
 import { buildSignSubmit } from "@/lib/classic-tx";
 import { getOfferClient } from "@/lib/contract";
 import { MIN_SHARES, PRICE_NGN, PRICE_USDC, USDC_ISSUER } from "@/lib/env";
+import { getErrorMessage } from "@/lib/error-message";
 
 const STROOP = 10_000_000n;
 
@@ -79,7 +80,7 @@ export function SubscribeStep() {
       refetchAccount();
     } catch (err) {
       toast.error("Add USDC trustline failed", {
-        description: err instanceof Error ? err.message : String(err),
+        description: getErrorMessage(err),
       });
     } finally {
       setAddingTrustline(false);
@@ -99,7 +100,7 @@ export function SubscribeStep() {
       refetchAccount();
     } catch (err) {
       toast.error("USDC faucet failed", {
-        description: err instanceof Error ? err.message : String(err),
+        description: getErrorMessage(err),
       });
     } finally {
       setRequestingFaucet(false);
@@ -127,7 +128,7 @@ export function SubscribeStep() {
       refetchOffer();
     } catch (err) {
       toast.error("Subscribe failed", {
-        description: err instanceof Error ? err.message : String(err),
+        description: getErrorMessage(err),
       });
     } finally {
       setSubmitting(false);

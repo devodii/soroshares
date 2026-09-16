@@ -9,6 +9,7 @@ import { useAccount } from "@/hooks/use-account";
 import { useWallet } from "@/hooks/use-wallet";
 import { buildSignSubmit } from "@/lib/classic-tx";
 import { DPRI_ISSUER } from "@/lib/env";
+import { getErrorMessage } from "@/lib/error-message";
 
 export function TrustlineStep() {
   const { address, signTransaction } = useWallet();
@@ -33,7 +34,7 @@ export function TrustlineStep() {
       refetch();
     } catch (err) {
       toast.error("Add trustline failed", {
-        description: err instanceof Error ? err.message : String(err),
+        description: getErrorMessage(err),
       });
     } finally {
       setSubmitting(false);

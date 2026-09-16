@@ -1,5 +1,6 @@
 import { Asset, BASE_FEE, Keypair, Operation, TransactionBuilder, rpc } from "@stellar/stellar-sdk";
 import { NETWORK_PASSPHRASE } from "@/lib/env";
+import { getErrorMessage } from "@/lib/error-message";
 
 /**
  * Wraps a classic asset into its Stellar Asset Contract via pure RPC + SDK
@@ -43,7 +44,7 @@ export async function ensureStellarAssetContract(
     }
   } catch (err) {
     // Another actor may have deployed it between our check and this attempt.
-    const message = err instanceof Error ? err.message : String(err);
+    const message = getErrorMessage(err);
     if (!message.includes("ExistingValue") && !message.includes("already exists")) throw err;
   }
 

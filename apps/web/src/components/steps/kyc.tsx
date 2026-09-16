@@ -20,6 +20,7 @@ import { useAccount } from "@/hooks/use-account";
 import { useKycStatus, useSubmitKyc } from "@/hooks/use-kyc";
 import { useWallet } from "@/hooks/use-wallet";
 import { AFRICAN_COUNTRIES } from "@/lib/african-countries";
+import { getErrorMessage } from "@/lib/error-message";
 
 const kycSchema = z.object({
   first_name: z.string().min(1, "required"),
@@ -69,7 +70,7 @@ export function KycStep() {
       await signIn();
     } catch (err) {
       toast.error("Sign in failed", {
-        description: err instanceof Error ? err.message : String(err),
+        description: getErrorMessage(err),
       });
     }
   }
@@ -84,7 +85,7 @@ export function KycStep() {
       }
     } catch (err) {
       toast.error("KYC submission failed", {
-        description: err instanceof Error ? err.message : String(err),
+        description: getErrorMessage(err),
       });
     }
   }

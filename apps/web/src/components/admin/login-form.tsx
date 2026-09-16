@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/error-message";
 
 export function AdminLoginForm() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export function AdminLoginForm() {
       router.refresh();
     } catch (err) {
       toast.error("Login failed", {
-        description: err instanceof Error ? err.message : String(err),
+        description: getErrorMessage(err),
       });
     } finally {
       setSubmitting(false);

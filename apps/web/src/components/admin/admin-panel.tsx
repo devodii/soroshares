@@ -12,6 +12,7 @@ import { useOffer } from "@/hooks/use-offer";
 import { useWallet } from "@/hooks/use-wallet";
 import { getOfferClient } from "@/lib/contract";
 import { ADMIN_PUBLIC } from "@/lib/env";
+import { getErrorMessage } from "@/lib/error-message";
 
 export function AdminPanel() {
   const { address, connecting, connect, signTransaction, signAuthEntry } = useWallet();
@@ -30,7 +31,7 @@ export function AdminPanel() {
       refetch();
     } catch (err) {
       toast.error("Bootstrap failed", {
-        description: err instanceof Error ? err.message : String(err),
+        description: getErrorMessage(err),
       });
     }
   }
@@ -47,7 +48,7 @@ export function AdminPanel() {
       refetch();
     } catch (err) {
       toast.error("Finalize failed", {
-        description: err instanceof Error ? err.message : String(err),
+        description: getErrorMessage(err),
       });
     } finally {
       setSubmitting(false);
@@ -66,7 +67,7 @@ export function AdminPanel() {
       refetch();
     } catch (err) {
       toast.error("Withdraw failed", {
-        description: err instanceof Error ? err.message : String(err),
+        description: getErrorMessage(err),
       });
     } finally {
       setSubmitting(false);
