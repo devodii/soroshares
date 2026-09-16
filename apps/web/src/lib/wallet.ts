@@ -6,7 +6,7 @@ import { NETWORK_PASSPHRASE, WALLETCONNECT_PROJECT_ID } from "./env";
 
 let initialized = false;
 
-function ensureInitialized(): void {
+function ensureInitialized(selectedWalletId?: string): void {
   if (initialized) return;
   const modules = defaultModules();
   if (WALLETCONNECT_PROJECT_ID) {
@@ -25,29 +25,31 @@ function ensureInitialized(): void {
   StellarWalletsKit.init({
     modules,
     network: NETWORK_PASSPHRASE as Networks,
+    selectedWalletId,
   });
   initialized = true;
 }
 
-export async function connect(): Promise<string> {
+export async function connect(): Promise<{ address: string; walletId: string }> {
   ensureInitialized();
   const { address } = await StellarWalletsKit.authModal();
-  return address;
+  return { address, walletId: StellarWalletsKit.selectedModule.productId };
+}
+
+/** Re-selects a previously connected wallet module and re-fetches its address, for restoring a session after a page refresh. */
+export async function restore(walletId: string): Promise<string | null> {
+  ensureInitialized(walletId);
+  try {
+    const { address } = await StellarWalletsKit.fetchAddress();
+    return address;
+  } catch {
+    return null;
+  }
 }
 
 export async function disconnect(): Promise<void> {
   ensureInitialized();
   await StellarWalletsKit.disconnect();
-}
-
-export async function getAddress(): Promise<string | null> {
-  ensureInitialized();
-  try {
-    const { address } = await StellarWalletsKit.getAddress();
-    return address;
-  } catch {
-    return null;
-  }
 }
 
 export async function signTransaction(xdr: string, address: string): Promise<string> {
