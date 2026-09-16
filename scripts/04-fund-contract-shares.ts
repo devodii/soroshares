@@ -25,11 +25,22 @@ function requireString(name: string): string {
 
 async function main(): Promise<void> {
   const issuer = requireKey("issuer");
-  const distributor = requireKey("distributor");
   const admin = requireKey("admin");
   const dpriSac = requireString("dpriSac");
+  const usdcIssuer = requireString("usdcIssuer");
   const offerContract = requireString("offerContract");
   const dpri = new Asset("DPRI", issuer.publicKey);
+  const usdc = new Asset("USDC", usdcIssuer);
+
+  // withdraw_proceeds pays USDC to admin, so admin needs a trustline for it
+  // even before any shares are subscribed or claimed.
+  const adminUsdcAccount = await horizon.loadAccount(admin.publicKey);
+  if (findTrustline(adminUsdcAccount.balances, usdc)) {
+    console.log("admin USDC trustline already open, skipping");
+  } else {
+    console.log("admin opening USDC trustline");
+    await submit(admin.secretKey, [Operation.changeTrust({ asset: usdc })]);
+  }
 
   const dpriClient = await contract.Client.from({
     contractId: dpriSac,
@@ -80,10 +91,13 @@ async function main(): Promise<void> {
   }
 
   if (adminTrustline && Number(adminTrustline.balance) >= Number(DEPOSIT_SHARES_WHOLE)) {
-    console.log(`admin already holds ${adminTrustline.balance} DPRI, skipping distributor payment`);
+    console.log(`admin already holds ${adminTrustline.balance} DPRI, skipping top-up`);
   } else {
-    console.log(`distributor paying ${DEPOSIT_SHARES_WHOLE} DPRI to admin`);
-    await submit(distributor.secretKey, [
+    // The distributor's balance is a fixed pool that depletes once it's fully
+    // handed to an earlier offer contract, so redeploying for a second demo
+    // run tops admin up straight from the issuer, which can mint more DPRI.
+    console.log(`issuer paying ${DEPOSIT_SHARES_WHOLE} DPRI to admin`);
+    await submit(issuer.secretKey, [
       Operation.payment({
         destination: admin.publicKey,
         asset: dpri,
