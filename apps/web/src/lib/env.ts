@@ -3,6 +3,15 @@ function requirePublic(name: string, value: string | undefined): string {
   return value;
 }
 
+/**
+ * Bootstrap-derived values (asset/contract addresses) don't exist until
+ * POST /api/admin/bootstrap has run once, so the app must still start
+ * without them — throwing here would make /admin itself unreachable.
+ */
+function optionalPublic(value: string | undefined): string {
+  return value ?? "";
+}
+
 export const NETWORK_PASSPHRASE = requirePublic(
   "NEXT_PUBLIC_NETWORK_PASSPHRASE",
   process.env.NEXT_PUBLIC_NETWORK_PASSPHRASE,
@@ -16,27 +25,13 @@ export const HOME_DOMAIN = requirePublic(
   "NEXT_PUBLIC_HOME_DOMAIN",
   process.env.NEXT_PUBLIC_HOME_DOMAIN,
 );
-export const DPRI_ISSUER = requirePublic(
-  "NEXT_PUBLIC_DPRI_ISSUER",
-  process.env.NEXT_PUBLIC_DPRI_ISSUER,
-);
-export const DPRI_SAC = requirePublic("NEXT_PUBLIC_DPRI_SAC", process.env.NEXT_PUBLIC_DPRI_SAC);
-export const USDC_ISSUER = requirePublic(
-  "NEXT_PUBLIC_USDC_ISSUER",
-  process.env.NEXT_PUBLIC_USDC_ISSUER,
-);
-export const USDC_SAC = requirePublic("NEXT_PUBLIC_USDC_SAC", process.env.NEXT_PUBLIC_USDC_SAC);
-export const OFFER_CONTRACT = requirePublic(
-  "NEXT_PUBLIC_OFFER_CONTRACT",
-  process.env.NEXT_PUBLIC_OFFER_CONTRACT,
-);
-export const ADMIN_PUBLIC = requirePublic(
-  "NEXT_PUBLIC_ADMIN_PUBLIC",
-  process.env.NEXT_PUBLIC_ADMIN_PUBLIC,
-);
-export const DEMO_CLOSE_LEDGER = Number(
-  requirePublic("NEXT_PUBLIC_DEMO_CLOSE_LEDGER", process.env.NEXT_PUBLIC_DEMO_CLOSE_LEDGER),
-);
+export const DPRI_ISSUER = optionalPublic(process.env.NEXT_PUBLIC_DPRI_ISSUER);
+export const DPRI_SAC = optionalPublic(process.env.NEXT_PUBLIC_DPRI_SAC);
+export const USDC_ISSUER = optionalPublic(process.env.NEXT_PUBLIC_USDC_ISSUER);
+export const USDC_SAC = optionalPublic(process.env.NEXT_PUBLIC_USDC_SAC);
+export const OFFER_CONTRACT = optionalPublic(process.env.NEXT_PUBLIC_OFFER_CONTRACT);
+export const ADMIN_PUBLIC = optionalPublic(process.env.NEXT_PUBLIC_ADMIN_PUBLIC);
+export const DEMO_CLOSE_LEDGER = Number(process.env.NEXT_PUBLIC_DEMO_CLOSE_LEDGER || 0);
 export const PRICE_NGN = Number(
   requirePublic("NEXT_PUBLIC_PRICE_NGN", process.env.NEXT_PUBLIC_PRICE_NGN),
 );

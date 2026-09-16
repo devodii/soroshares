@@ -30,31 +30,26 @@ apps/web/                 Next.js demo: the subscription flow + /admin
 
 ## How to run
 
-Requires: Rust + the `stellar` CLI, Node 20+, pnpm.
+Requires: Node 20+, pnpm. Rust + the `stellar` CLI are only needed if you're changing the contract — the compiled wasm is committed, so deploying doesn't need them.
 
 ```bash
 pnpm install
-
-# 1. build + test the contract
-cd contracts/public_offer && cargo test && cd ../..
-
-# 2. bootstrap testnet: accounts, DPRI issuance, contract deploy, share funding
-pnpm --dir scripts setup-accounts
-pnpm --dir scripts issue-dpri
-pnpm --dir scripts deploy-contract
-pnpm --dir scripts fund-contract-shares
-pnpm --dir scripts bindings
-
-# 3. print the filled-in env block and paste it into apps/web/.env.local
-pnpm --dir scripts print-env
-
-# 4. run the app
 pnpm --dir apps/web dev
 ```
 
-Redeploying for a fresh demo run (a closed offer can't reopen): clear `offerContract` from `scripts/.keys.json`, then rerun `deploy-contract`, `fund-contract-shares`, and `print-env`.
+Then set `apps/web/.env.local` (see `.env.local.example`) with at minimum: `ISSUER_SECRET`, `ADMIN_SECRET`, `SERVER_SIGNING_SECRET`, `JWT_SECRET`, `ADMIN_UI_PASSWORD` — each is just a fresh Stellar keypair secret / random string, no CLI required to generate them. Log into `/admin` and press **Run bootstrap**: it funds the issuer/admin via Friendbot, issues DPRI, wraps DPRI and USDC into their Stellar Asset Contracts, deploys and initializes `public_offer`, and funds it with shares — idempotent, safe to press again. Copy the resulting `offerContract` (and the DPRI/USDC issuer + SAC addresses, all also returned) into the `NEXT_PUBLIC_*` values in `.env.local` and restart.
 
-`/admin` is gated by `ADMIN_UI_PASSWORD` (printed by `print-env`); the connected wallet must match `NEXT_PUBLIC_ADMIN_PUBLIC` to finalize or withdraw.
+This is what `POST /api/admin/bootstrap` does under the hood — there's nothing here that needs cloning the repo onto a machine with Rust installed.
+
+### Redeploying for a fresh demo run
+
+An offer that has closed can't reopen. Press **Redeploy fresh offer** in `/admin` (or `POST /api/admin/bootstrap` with `{"redeploy": true}`), then update `.env.local` again.
+
+`/admin` is gated by `ADMIN_UI_PASSWORD`; the connected wallet must match `NEXT_PUBLIC_ADMIN_PUBLIC` to finalize or withdraw.
+
+### The old scripts
+
+`scripts/` still contains the original CLI-driven setup (`setup-accounts`, `issue-dpri`, `deploy-contract`, `fund-contract-shares`, `bindings`, `print-env`) that does the same thing from a terminal instead of `/admin`. Kept for now as a reference/fallback; the bootstrap API is the supported path going forward.
 
 ### USDC
 
