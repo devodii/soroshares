@@ -20,8 +20,9 @@ const rpcServer = new rpc.Server(RPC_URL);
 const CONTRACT_DIR = fileURLToPath(new URL("../contracts/public_offer", import.meta.url));
 const WASM_PATH = `${CONTRACT_DIR}/target/wasm32v1-none/release/public_offer.wasm`;
 
-const DEMO_CLOSE_WINDOW_LEDGERS = 60;
-const GRACE_LEDGERS = 200;
+const LEDGERS_PER_DAY = 17_280; // ~5s per ledger
+const CLOSE_WINDOW_LEDGERS = 30 * LEDGERS_PER_DAY; // offer stays open for 30 days
+const GRACE_LEDGERS = 7 * LEDGERS_PER_DAY; // 7 days after close before refund() is permissionless
 const PRICE_USDC_STROOPS = 3_900_000n;
 const MIN_SHARES = 10n * 10_000_000n;
 
@@ -121,7 +122,7 @@ async function main(): Promise<void> {
     console.log("offer already initialized, skipping init");
   } else {
     const latestLedger = await rpcServer.getLatestLedger();
-    const closeLedger = latestLedger.sequence + DEMO_CLOSE_WINDOW_LEDGERS;
+    const closeLedger = latestLedger.sequence + CLOSE_WINDOW_LEDGERS;
 
     console.log(`calling init (close_ledger=${closeLedger}, grace_ledgers=${GRACE_LEDGERS})`);
     const initTx = await (client as any).init({

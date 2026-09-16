@@ -201,15 +201,15 @@ export class Client extends ContractClient {
     );
   }
   public readonly fromJSON = {
-    init: this.txFromJSON<Result<void>>,
-    claim: this.txFromJSON<Result<void>>,
-    refund: this.txFromJSON<Result<void>>,
-    finalize: this.txFromJSON<Result<void>>,
-    get_offer: this.txFromJSON<Result<Offer>>,
-    subscribe: this.txFromJSON<Result<void>>,
-    has_claimed: this.txFromJSON<boolean>,
-    deposit_shares: this.txFromJSON<Result<void>>,
-    get_subscription: this.txFromJSON<i128>,
-    withdraw_proceeds: this.txFromJSON<Result<void>>,
+    init: this.txFromJson<Result<void>>,
+    claim: this.txFromJson<Result<void>>,
+    refund: this.txFromJson<Result<void>>,
+    finalize: this.txFromJson<Result<void>>,
+    get_offer: this.txFromJson<Result<Offer>>,
+    subscribe: this.txFromJson<Result<void>>,
+    has_claimed: this.txFromJson<boolean>,
+    deposit_shares: this.txFromJson<Result<void>>,
+    get_subscription: this.txFromJson<i128>,
+    withdraw_proceeds: this.txFromJson<Result<void>>,
   };
 }
