@@ -1,6 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Asset, Operation } from "@stellar/stellar-sdk";
+import * as React from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -20,7 +22,12 @@ import { useAccount } from "@/hooks/use-account";
 import { useKycStatus, useSubmitKyc } from "@/hooks/use-kyc";
 import { useWallet } from "@/hooks/use-wallet";
 import { AFRICAN_COUNTRIES } from "@/lib/african-countries";
+import { apiFetch } from "@/lib/api-client";
+import { buildSignSubmit } from "@/lib/classic-tx";
+import { USDC_ISSUER } from "@/lib/env";
 import { getErrorMessage } from "@/lib/error-message";
+
+const USDC_TOPUP_FLOOR = 100;
 
 const kycSchema = z.object({
   first_name: z.string().min(1, "required"),
@@ -43,10 +50,11 @@ const DEMO_DATA: KycFormValues = {
 };
 
 export function KycStep() {
-  const { address, token, signingIn, signIn } = useWallet();
-  const { data: account } = useAccount(address);
+  const { address, token, signIn, signTransaction } = useWallet();
+  const { data: account, refetch: refetchAccount } = useAccount(address);
   const { data: kyc } = useKycStatus(token);
   const submitKyc = useSubmitKyc(token);
+  const [preparing, setPreparing] = React.useState(false);
 
   const form = useForm<KycFormValues>({
     resolver: zodResolver(kycSchema),
@@ -66,12 +74,31 @@ export function KycStep() {
     !address || !trustlineOpen ? "pending" : kyc?.status === "ACCEPTED" ? "done" : "active";
 
   async function handleSignIn() {
+    if (!address) return;
+    setPreparing(true);
     try {
+      if (!account?.usdcTrustline) {
+        await buildSignSubmit(
+          address,
+          [Operation.changeTrust({ asset: new Asset("USDC", USDC_ISSUER) })],
+          signTransaction,
+        );
+      }
+      if (!account?.usdcTrustline || Number(account.usdc) < USDC_TOPUP_FLOOR) {
+        await apiFetch("/api/faucet/usdc", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ address }),
+        });
+      }
+      refetchAccount();
       await signIn();
     } catch (err) {
       toast.error("Sign in failed", {
         description: getErrorMessage(err),
       });
+    } finally {
+      setPreparing(false);
     }
   }
 
@@ -93,15 +120,15 @@ export function KycStep() {
   return (
     <StepCard step={3} title="Verify identity" status={status}>
       {!token && (
-        <Button onClick={handleSignIn} disabled={!address || !trustlineOpen || signingIn}>
-          {signingIn ? "Signing in…" : "Sign in"}
+        <Button onClick={handleSignIn} disabled={!address || !trustlineOpen || preparing}>
+          {preparing ? "Preparing…" : "Sign in"}
         </Button>
       )}
       {token && kyc?.status !== "ACCEPTED" && (
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
           <button
             type="button"
-            className="text-xs text-muted-foreground underline underline-offset-2"
+            className="cursor-pointer text-xs text-muted-foreground underline underline-offset-2"
             onClick={() => form.reset(DEMO_DATA)}
           >
             Use demo data
