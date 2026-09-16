@@ -1,4 +1,4 @@
-import { createDiskStore } from "@/lib/disk-store";
+import { createRedisStore } from "@/lib/redis-store";
 
 export interface BootstrapState {
   dpriIssuer: string;
@@ -12,13 +12,13 @@ export interface BootstrapState {
   updatedAt: string;
 }
 
-const store = createDiskStore<BootstrapState>("bootstrap");
+const store = createRedisStore<BootstrapState>("bootstrap");
 const KEY = "current";
 
-export function getBootstrapState(): BootstrapState | undefined {
+export function getBootstrapState(): Promise<BootstrapState | undefined> {
   return store.get(KEY);
 }
 
-export function saveBootstrapState(state: BootstrapState): void {
-  store.set(KEY, state);
+export function saveBootstrapState(state: BootstrapState): Promise<void> {
+  return store.set(KEY, state);
 }

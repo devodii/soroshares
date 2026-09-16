@@ -30,8 +30,9 @@ export const PUT = apiHandler({
       }
     }
 
-    const record = { id: getKyc(account)?.id ?? randomUUID(), status, message, ...body };
-    putKyc(account, record);
+    const existing = await getKyc(account);
+    const record = { id: existing?.id ?? randomUUID(), status, message, ...body };
+    await putKyc(account, record);
     return record;
   },
 });
@@ -39,7 +40,7 @@ export const PUT = apiHandler({
 export const GET = apiHandler({
   handler: async ({ req }) => {
     const account = await requireBearerAccount(req);
-    const record = getKyc(account);
+    const record = await getKyc(account);
     if (!record) throw new ApiError(404, "NOT_FOUND", "no KYC record for this account");
     return record;
   },

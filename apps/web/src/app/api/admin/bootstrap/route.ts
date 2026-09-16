@@ -6,7 +6,7 @@ import { runBootstrap } from "@/lib/bootstrap/pipeline";
 export const GET = apiHandler({
   auth: "admin",
   handler: async () => {
-    return getBootstrapState() ?? { bootstrapped: false };
+    return (await getBootstrapState()) ?? { bootstrapped: false };
   },
 });
 

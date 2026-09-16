@@ -1,7 +1,7 @@
 import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createDiskStore } from "./disk-store";
+import { createRedisStore } from "./redis-store";
 import { bearerToken, verifyAdminSession, verifyToken } from "./jwt";
 
 export class ApiError extends Error {
@@ -34,8 +34,8 @@ interface IdempotencyRecord {
   completedAt?: number;
 }
 
-const rateLimitStore = createDiskStore<RateLimitRecord>("rate-limits");
-const idempotencyStore = createDiskStore<IdempotencyRecord>("idempotency");
+const rateLimitStore = createRedisStore<RateLimitRecord>("rate-limits");
+const idempotencyStore = createRedisStore<IdempotencyRecord>("idempotency");
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const DEFAULT_RATE_LIMIT = 30;
@@ -45,22 +45,22 @@ function clientKey(req: NextRequest): string {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
 }
 
-function checkRateLimit(
+async function checkRateLimit(
   key: string,
   limit: number,
-): { ok: boolean; remaining: number; resetAt: number } {
+): Promise<{ ok: boolean; remaining: number; resetAt: number }> {
   const now = Date.now();
-  const existing = rateLimitStore.get(key);
+  const existing = await rateLimitStore.get(key);
 
   if (!existing || existing.resetAt <= now) {
     const resetAt = now + RATE_LIMIT_WINDOW_MS;
-    rateLimitStore.set(key, { count: 1, resetAt });
+    await rateLimitStore.set(key, { count: 1, resetAt });
     return { ok: true, remaining: limit - 1, resetAt };
   }
   if (existing.count >= limit) {
     return { ok: false, remaining: 0, resetAt: existing.resetAt };
   }
-  rateLimitStore.set(key, { count: existing.count + 1, resetAt: existing.resetAt });
+  await rateLimitStore.set(key, { count: existing.count + 1, resetAt: existing.resetAt });
   return { ok: true, remaining: limit - existing.count - 1, resetAt: existing.resetAt };
 }
 
@@ -101,7 +101,7 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
       }
 
       const limit = config.rateLimit ?? DEFAULT_RATE_LIMIT;
-      const rl = checkRateLimit(`${req.nextUrl.pathname}:${clientKey(req)}`, limit);
+      const rl = await checkRateLimit(`${req.nextUrl.pathname}:${clientKey(req)}`, limit);
       const responseHeaders = {
         "X-RateLimit-Limit": String(limit),
         "X-RateLimit-Remaining": String(rl.remaining),
@@ -110,7 +110,7 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
       if (!rl.ok) throw new ApiError(429, "RATE_LIMITED", "too many requests, try again shortly");
 
       if (isIdempotent && idempotencyKey) {
-        const stored = idempotencyStore.get(idempotencyKey);
+        const stored = await idempotencyStore.get(idempotencyKey);
         if (stored?.completedAt) {
           return NextResponse.json(stored.body, {
             status: stored.status,
@@ -120,7 +120,7 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
         if (stored && Date.now() - stored.lockedAt < IDEMPOTENCY_LOCK_TIMEOUT_MS) {
           throw new ApiError(409, "REQUEST_IN_PROGRESS", "this request is already being processed");
         }
-        idempotencyStore.set(idempotencyKey, { status: 0, body: null, lockedAt: Date.now() });
+        await idempotencyStore.set(idempotencyKey, { status: 0, body: null, lockedAt: Date.now() });
       }
 
       let body = undefined as TBody;
@@ -149,7 +149,7 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
       if (result instanceof Response) return result;
 
       if (isIdempotent && idempotencyKey) {
-        idempotencyStore.set(idempotencyKey, {
+        await idempotencyStore.set(idempotencyKey, {
           status: 200,
           body: result,
           lockedAt: Date.now(),
@@ -159,7 +159,7 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
 
       return NextResponse.json(result, { headers: responseHeaders });
     } catch (error) {
-      if (isIdempotent && idempotencyKey) idempotencyStore.delete(idempotencyKey);
+      if (isIdempotent && idempotencyKey) await idempotencyStore.delete(idempotencyKey);
 
       const isApiError = error instanceof ApiError;
       const status = isApiError ? error.status : 500;

@@ -1,4 +1,4 @@
-import { createDiskStore } from "./disk-store";
+import { createRedisStore } from "./redis-store";
 
 export type KycStatus = "ACCEPTED" | "REJECTED" | "NEEDS_INFO";
 
@@ -14,12 +14,12 @@ export interface KycRecord {
   email_address: string;
 }
 
-const store = createDiskStore<KycRecord>("kyc");
+const store = createRedisStore<KycRecord>("kyc");
 
-export function getKyc(account: string): KycRecord | undefined {
+export function getKyc(account: string): Promise<KycRecord | undefined> {
   return store.get(account);
 }
 
-export function putKyc(account: string, record: KycRecord): void {
-  store.set(account, record);
+export function putKyc(account: string, record: KycRecord): Promise<void> {
+  return store.set(account, record);
 }

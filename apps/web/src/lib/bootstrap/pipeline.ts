@@ -67,7 +67,7 @@ export async function runBootstrap(options: RunBootstrapOptions = {}): Promise<B
 
   await ensureAdminTrustlines(issuer, admin, dpri, usdc);
 
-  const cached = getBootstrapState();
+  const cached = await getBootstrapState();
   let offerContract = cached?.offerContract;
   const closeWindowLedgers = (options.closeWindowDays ?? 30) * LEDGERS_PER_DAY;
   const graceLedgers = (options.graceDays ?? 7) * LEDGERS_PER_DAY;
@@ -102,7 +102,7 @@ export async function runBootstrap(options: RunBootstrapOptions = {}): Promise<B
     adminPublic: admin.publicKey(),
     updatedAt: new Date().toISOString(),
   };
-  saveBootstrapState(state);
+  await saveBootstrapState(state);
   return state;
 }
 
