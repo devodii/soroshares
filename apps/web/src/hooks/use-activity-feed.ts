@@ -15,18 +15,29 @@ export interface ActivityEvent {
 }
 
 const EVENT_WINDOW_LEDGERS = 6000;
+const STROOP = 10_000_000;
+const STROOP_FIELDS = new Set(["shares", "allotted", "refund_usdc", "amount"]);
+
+function formatValue(key: string, val: unknown): string {
+  if (STROOP_FIELDS.has(key) && (typeof val === "bigint" || typeof val === "number")) {
+    return (Number(val) / STROOP).toString();
+  }
+  if (key === "allotment_bps" && typeof val === "number") {
+    return `${val / 100}%`;
+  }
+  return String(val);
+}
 
 function describe(
   topics: unknown[],
   value: unknown,
 ): { type: string; address?: string; detail: string } {
   const type = typeof topics[0] === "string" ? topics[0] : "event";
-  const address =
-    typeof topics[1] === "string" && topics[1].startsWith("G") ? topics[1] : undefined;
+  const address = typeof topics[1] === "string" && topics[1].startsWith("G") ? topics[1] : undefined;
 
   if (value && typeof value === "object") {
     const parts = Object.entries(value as Record<string, unknown>).map(
-      ([key, val]) => `${key}=${String(val)}`,
+      ([key, val]) => `${key}=${formatValue(key, val)}`,
     );
     return { type, address, detail: parts.join(", ") };
   }
@@ -65,7 +76,6 @@ export function useActivityFeed() {
   return useQuery({
     queryKey: ["activity-feed"],
     queryFn: fetchActivity,
-    refetchInterval: 8000,
-    retry: false,
+    refetchInterval: 5000,
   });
 }
