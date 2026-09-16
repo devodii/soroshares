@@ -1,0 +1,34 @@
+import { Keypair } from "@stellar/stellar-sdk";
+import { NextResponse } from "next/server";
+import { DPRI_ISSUER, HOME_DOMAIN, NETWORK_PASSPHRASE, serverSigningSecret } from "@/lib/env";
+
+export async function GET(): Promise<NextResponse> {
+  const signingKey = Keypair.fromSecret(serverSigningSecret()).publicKey();
+  const origin = `https://${HOME_DOMAIN}`;
+
+  const toml = `NETWORK_PASSPHRASE="${NETWORK_PASSPHRASE}"
+WEB_AUTH_ENDPOINT="${origin}/api/auth"
+KYC_SERVER="${origin}/api/kyc"
+SIGNING_KEY="${signingKey}"
+
+[DOCUMENTATION]
+ORG_NAME="soroshares"
+ORG_URL="https://github.com/devodii/soroshares"
+
+[[CURRENCIES]]
+code="DPRI"
+issuer="${DPRI_ISSUER}"
+is_asset_anchored=true
+anchor_asset_type="stock"
+anchor_asset="DPRI"
+status="test"
+desc="Reference IPO subscription on Stellar, modeled on the Dangote Petroleum Refinery IPO terms. Testnet only, not affiliated with Dangote."
+`;
+
+  return new NextResponse(toml, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
+}
