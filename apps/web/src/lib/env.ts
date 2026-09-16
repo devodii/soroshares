@@ -58,6 +58,16 @@ export function issuerSecret(): string {
   return requireServer("ISSUER_SECRET", process.env.ISSUER_SECRET);
 }
 
+export function adminSecret(): string {
+  return requireServer("ADMIN_SECRET", process.env.ADMIN_SECRET);
+}
+
+export function mockUsdcIssuerSecret(): string {
+  return requireServer("MOCK_USDC_ISSUER_SECRET", process.env.MOCK_USDC_ISSUER_SECRET);
+}
+
+export const USE_MOCK_USDC = process.env.USE_MOCK_USDC === "true";
+
 export function serverSigningSecret(): string {
   return requireServer("SERVER_SIGNING_SECRET", process.env.SERVER_SIGNING_SECRET);
 }
