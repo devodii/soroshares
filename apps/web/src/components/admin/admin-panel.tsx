@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useBootstrapStatus, useRunBootstrap } from "@/hooks/use-bootstrap";
 import { useOffer } from "@/hooks/use-offer";
 import { useWallet } from "@/hooks/use-wallet";
 import { getOfferClient } from "@/lib/contract";
@@ -15,10 +16,24 @@ import { ADMIN_PUBLIC } from "@/lib/env";
 export function AdminPanel() {
   const { address, connecting, connect, signTransaction, signAuthEntry } = useWallet();
   const { data: offer, refetch } = useOffer();
+  const { data: bootstrapStatus } = useBootstrapStatus();
+  const runBootstrap = useRunBootstrap();
   const [allotmentPct, setAllotmentPct] = React.useState(60);
   const [submitting, setSubmitting] = React.useState(false);
 
   const isAdmin = address === ADMIN_PUBLIC;
+
+  async function handleBootstrap(redeploy: boolean) {
+    try {
+      await runBootstrap.mutateAsync({ redeploy });
+      toast.success(redeploy ? "Redeployed a fresh offer" : "Bootstrap complete");
+      refetch();
+    } catch (err) {
+      toast.error("Bootstrap failed", {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
 
   async function handleFinalize() {
     if (!address) return;
@@ -61,6 +76,34 @@ export function AdminPanel() {
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 space-y-6 px-4 py-10">
       <h1 className="text-xl font-semibold">Admin</h1>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Bootstrap</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Provisions testnet accounts, issues DPRI, deploys the offer contract, and funds it — no
+            local Rust/Stellar CLI needed. Safe to run repeatedly; already-completed steps are
+            skipped.
+          </p>
+          {bootstrapStatus && "offerContract" in bootstrapStatus && (
+            <p className="font-mono text-xs break-all">contract: {bootstrapStatus.offerContract}</p>
+          )}
+          <div className="flex gap-2">
+            <Button onClick={() => handleBootstrap(false)} disabled={runBootstrap.isPending}>
+              {runBootstrap.isPending ? "Running…" : "Run bootstrap"}
+            </Button>
+            <Button
+              onClick={() => handleBootstrap(true)}
+              disabled={runBootstrap.isPending}
+              variant="secondary"
+            >
+              Redeploy fresh offer
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

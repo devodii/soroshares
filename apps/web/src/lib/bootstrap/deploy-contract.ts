@@ -1,11 +1,4 @@
-import {
-  BASE_FEE,
-  Keypair,
-  Operation,
-  TransactionBuilder,
-  hash,
-  rpc,
-} from "@stellar/stellar-sdk";
+import { BASE_FEE, Keypair, Operation, TransactionBuilder, hash, rpc } from "@stellar/stellar-sdk";
 import { Client as OfferClient } from "@soroshares/contract-client";
 import { NETWORK_PASSPHRASE, RPC_URL } from "@/lib/env";
 import { publicOfferWasm } from "./wasm";
@@ -22,7 +15,10 @@ async function ensureWasmInstalled(rpcServer: rpc.Server, keypair: Keypair): Pro
   }
 
   const account = await rpcServer.getAccount(keypair.publicKey());
-  const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: NETWORK_PASSPHRASE })
+  const tx = new TransactionBuilder(account, {
+    fee: BASE_FEE,
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
     .addOperation(Operation.uploadContractWasm({ wasm: wasmBytes }))
     .setTimeout(60)
     .build();

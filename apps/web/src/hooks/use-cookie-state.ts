@@ -13,7 +13,11 @@ interface CookieOptions {
 
 const DEFAULT_OPTIONS: CookieOptions = { expires: 1, path: "/" };
 
-export function useCookieState<T>(key: string, initialValue: T, options: CookieOptions = DEFAULT_OPTIONS) {
+export function useCookieState<T>(
+  key: string,
+  initialValue: T,
+  options: CookieOptions = DEFAULT_OPTIONS,
+) {
   const [value, setValue] = React.useState<T>(() => {
     if (typeof window === "undefined") return initialValue;
     const cookie = Cookies.get(key);

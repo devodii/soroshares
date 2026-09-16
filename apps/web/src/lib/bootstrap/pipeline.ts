@@ -59,7 +59,9 @@ export async function runBootstrap(options: RunBootstrapOptions = {}): Promise<B
   const dpriSac = await ensureStellarAssetContract(rpcServer, dpri, admin);
 
   const usdcIssuerKeypair = USE_MOCK_USDC ? Keypair.fromSecret(mockUsdcIssuerSecret()) : admin;
-  const usdcIssuerPublicKey = USE_MOCK_USDC ? usdcIssuerKeypair.publicKey() : CIRCLE_TESTNET_USDC_ISSUER;
+  const usdcIssuerPublicKey = USE_MOCK_USDC
+    ? usdcIssuerKeypair.publicKey()
+    : CIRCLE_TESTNET_USDC_ISSUER;
   if (USE_MOCK_USDC) await ensureFunded(usdcIssuerPublicKey);
   const usdc = new Asset("USDC", usdcIssuerPublicKey);
   const usdcSac = await ensureStellarAssetContract(rpcServer, usdc, usdcIssuerKeypair);
@@ -107,7 +109,11 @@ export async function runBootstrap(options: RunBootstrapOptions = {}): Promise<B
 
 async function ensureIssuerFlags(issuer: Keypair): Promise<void> {
   const account = await horizonServer.loadAccount(issuer.publicKey());
-  if (account.flags.auth_required && account.flags.auth_revocable && account.flags.auth_clawback_enabled) {
+  if (
+    account.flags.auth_required &&
+    account.flags.auth_revocable &&
+    account.flags.auth_clawback_enabled
+  ) {
     return;
   }
   await submitWithKeypair(issuer, [
@@ -132,7 +138,11 @@ async function ensureAdminTrustlines(
 
   if (!dpriLine?.is_authorized) {
     await submitWithKeypair(issuer, [
-      Operation.setTrustLineFlags({ trustor: admin.publicKey(), asset: dpri, flags: { authorized: true } }),
+      Operation.setTrustLineFlags({
+        trustor: admin.publicKey(),
+        asset: dpri,
+        flags: { authorized: true },
+      }),
     ]);
   }
 

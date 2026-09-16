@@ -37,7 +37,9 @@ export async function ensureStellarAssetContract(
     const sent = await rpcServer.sendTransaction(prepared);
     const final = await rpcServer.pollTransaction(sent.hash, { attempts: 30 });
     if (final.status !== rpc.Api.GetTransactionStatus.SUCCESS) {
-      throw new Error(`SAC deploy for ${asset.code}:${asset.issuer} failed: ${JSON.stringify(final)}`);
+      throw new Error(
+        `SAC deploy for ${asset.code}:${asset.issuer} failed: ${JSON.stringify(final)}`,
+      );
     }
   } catch (err) {
     // Another actor may have deployed it between our check and this attempt.

@@ -32,7 +32,11 @@ export const POST = apiHandler({
       const token = await issueToken(account);
       return { token };
     } catch (err) {
-      throw new ApiError(400, "VERIFICATION_FAILED", err instanceof Error ? err.message : String(err));
+      throw new ApiError(
+        400,
+        "VERIFICATION_FAILED",
+        err instanceof Error ? err.message : String(err),
+      );
     }
   },
 });

@@ -84,10 +84,14 @@ export interface HandlerConfig<TBody, TQuery> {
 }
 
 function issuesToMessage(error: z.ZodError): string {
-  return error.issues.map((issue) => `${issue.path.join(".") || "body"}: ${issue.message}`).join("; ");
+  return error.issues
+    .map((issue) => `${issue.path.join(".") || "body"}: ${issue.message}`)
+    .join("; ");
 }
 
-export function apiHandler<TBody = unknown, TQuery = unknown>(config: HandlerConfig<TBody, TQuery>) {
+export function apiHandler<TBody = unknown, TQuery = unknown>(
+  config: HandlerConfig<TBody, TQuery>,
+) {
   return async (req: NextRequest): Promise<Response> => {
     const idempotencyKey = req.headers.get("Idempotency-Key");
     const isIdempotent = Boolean(idempotencyKey) && req.method === "POST";
@@ -110,7 +114,10 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(config: HandlerCon
       if (isIdempotent && idempotencyKey) {
         const stored = idempotencyStore.get(idempotencyKey);
         if (stored?.completedAt) {
-          return NextResponse.json(stored.body, { status: stored.status, headers: responseHeaders });
+          return NextResponse.json(stored.body, {
+            status: stored.status,
+            headers: responseHeaders,
+          });
         }
         if (stored && Date.now() - stored.lockedAt < IDEMPOTENCY_LOCK_TIMEOUT_MS) {
           throw new ApiError(409, "REQUEST_IN_PROGRESS", "this request is already being processed");

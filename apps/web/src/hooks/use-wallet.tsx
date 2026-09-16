@@ -23,7 +23,10 @@ const WalletContext = React.createContext<WalletContextValue | null>(null);
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [address, setAddress] = useCookieState<string | null>("sh_address", null);
   const [walletId, setWalletId] = useCookieState<string | null>("sh_wallet_id", null);
-  const [token, setToken] = useCookieState<string | null>("sh_token", null, { expires: 1, path: "/" });
+  const [token, setToken] = useCookieState<string | null>("sh_token", null, {
+    expires: 1,
+    path: "/",
+  });
   const [connecting, setConnecting] = React.useState(false);
   const [restoring, setRestoring] = React.useState(false);
   const [signingIn, setSigningIn] = React.useState(false);
