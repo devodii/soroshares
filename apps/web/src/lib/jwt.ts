@@ -19,6 +19,24 @@ export async function verifyToken(token: string): Promise<string> {
   return payload.sub;
 }
 
+export async function issueAdminSession(): Promise<string> {
+  return new SignJWT({ role: "admin" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("24h")
+    .sign(secretKey());
+}
+
+export async function verifyAdminSession(token: string | undefined): Promise<boolean> {
+  if (!token) return false;
+  try {
+    const { payload } = await jwtVerify(token, secretKey());
+    return payload.role === "admin";
+  } catch {
+    return false;
+  }
+}
+
 export function bearerToken(authorizationHeader: string | null): string {
   if (!authorizationHeader?.startsWith("Bearer ")) {
     throw new Error("missing bearer token");
