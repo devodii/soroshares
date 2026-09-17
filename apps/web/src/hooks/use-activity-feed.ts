@@ -2,7 +2,7 @@
 
 import { scValToNative } from "@stellar/stellar-sdk";
 import { useQuery } from "@tanstack/react-query";
-import { OFFER_CONTRACT } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
 import { rpcServer } from "@/lib/stellar";
 
 export interface ActivityEvent {
@@ -49,7 +49,7 @@ async function fetchActivity(): Promise<ActivityEvent[]> {
   const startLedger = Math.max(latest.sequence - EVENT_WINDOW_LEDGERS, 1);
 
   const response = await rpcServer.getEvents({
-    filters: [{ contractIds: [OFFER_CONTRACT] }],
+    filters: [{ contractIds: [clientEnv.NEXT_PUBLIC_OFFER_CONTRACT] }],
     startLedger,
     limit: 20,
   });

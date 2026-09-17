@@ -8,7 +8,8 @@ import {
 } from "@stellar/stellar-sdk";
 import { z } from "zod";
 import { ApiError, apiHandler } from "@/lib/api-handler";
-import { NETWORK_PASSPHRASE, USDC_ISSUER, USE_MOCK_USDC, mockUsdcIssuerSecret } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
+import { serverEnv } from "@/lib/env.server";
 import { FAUCET_AMOUNT } from "@/lib/faucet";
 import { horizonServer } from "@/lib/stellar";
 import { findTrustline } from "@/lib/trustline";
@@ -21,7 +22,7 @@ const faucetBody = z.union([
 ]);
 
 function assertCombinedTxIsSafe(tx: Transaction, issuerPublicKey: string): void {
-  const usdc = new Asset("USDC", USDC_ISSUER);
+  const usdc = new Asset("USDC", clientEnv.NEXT_PUBLIC_USDC_ISSUER);
   if (tx.operations.length > 2) {
     throw new ApiError(400, "INVALID_TX", "too many operations");
   }
@@ -58,7 +59,7 @@ export const POST = apiHandler({
   rateLimit: 10,
   schema: { body: faucetBody },
   handler: async ({ body }) => {
-    if (!USE_MOCK_USDC) {
+    if (!serverEnv.USE_MOCK_USDC) {
       throw new ApiError(
         400,
         "NOT_MOCK_USDC",
@@ -66,10 +67,10 @@ export const POST = apiHandler({
       );
     }
 
-    const issuer = Keypair.fromSecret(mockUsdcIssuerSecret());
+    const issuer = Keypair.fromSecret(serverEnv.MOCK_USDC_ISSUER_SECRET);
 
     if ("signedXdr" in body) {
-      const tx = TransactionBuilder.fromXDR(body.signedXdr, NETWORK_PASSPHRASE);
+      const tx = TransactionBuilder.fromXDR(body.signedXdr, clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE);
       if (!(tx instanceof Transaction)) {
         throw new ApiError(400, "INVALID_TX", "fee bump transactions are not supported");
       }
@@ -79,7 +80,7 @@ export const POST = apiHandler({
       return { amount: FAUCET_AMOUNT };
     }
 
-    const usdc = new Asset("USDC", USDC_ISSUER);
+    const usdc = new Asset("USDC", clientEnv.NEXT_PUBLIC_USDC_ISSUER);
     const [account, issuerAccount] = await Promise.all([
       horizonServer.loadAccount(body.address),
       horizonServer.loadAccount(issuer.publicKey()),
@@ -90,7 +91,7 @@ export const POST = apiHandler({
 
     const tx = new TransactionBuilder(issuerAccount, {
       fee: BASE_FEE,
-      networkPassphrase: NETWORK_PASSPHRASE,
+      networkPassphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
     })
       .addOperation(Operation.payment({ destination: body.address, asset: usdc, amount: FAUCET_AMOUNT }))
       .setTimeout(60)

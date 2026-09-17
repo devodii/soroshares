@@ -1,7 +1,8 @@
 import { Client } from "@soroshares/contract-client";
 import { Keypair } from "@stellar/stellar-sdk";
 import { apiHandler } from "@/lib/api-handler";
-import { NETWORK_PASSPHRASE, OFFER_CONTRACT, RPC_URL, adminSecret } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
+import { serverEnv } from "@/lib/env.server";
 import { getErrorMessage } from "@/lib/error-message";
 import { rpcServer } from "@/lib/stellar";
 import { refreshSubscriberIndex } from "@/lib/subscriber-index";
@@ -12,11 +13,11 @@ export const GET = apiHandler({
   auth: "cron",
   rateLimit: 5,
   handler: async () => {
-    const admin = Keypair.fromSecret(adminSecret());
+    const admin = Keypair.fromSecret(serverEnv.ADMIN_SECRET);
     const client = new Client({
-      contractId: OFFER_CONTRACT,
-      networkPassphrase: NETWORK_PASSPHRASE,
-      rpcUrl: RPC_URL,
+      contractId: clientEnv.NEXT_PUBLIC_OFFER_CONTRACT,
+      networkPassphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
+      rpcUrl: clientEnv.NEXT_PUBLIC_RPC_URL,
       publicKey: admin.publicKey(),
       signTransaction: admin,
     });

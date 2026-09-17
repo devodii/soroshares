@@ -1,15 +1,16 @@
 import { Keypair } from "@stellar/stellar-sdk";
 import { NextResponse } from "next/server";
 import { apiHandler } from "@/lib/api-handler";
-import { DPRI_ISSUER, HOME_DOMAIN, NETWORK_PASSPHRASE, serverSigningSecret } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
+import { serverEnv } from "@/lib/env.server";
 
 export const GET = apiHandler({
   rateLimit: 60,
   handler: async () => {
-    const signingKey = Keypair.fromSecret(serverSigningSecret()).publicKey();
-    const origin = `https://${HOME_DOMAIN}`;
+    const signingKey = Keypair.fromSecret(serverEnv.SERVER_SIGNING_SECRET).publicKey();
+    const origin = `https://${clientEnv.NEXT_PUBLIC_HOME_DOMAIN}`;
 
-    const toml = `NETWORK_PASSPHRASE="${NETWORK_PASSPHRASE}"
+    const toml = `NETWORK_PASSPHRASE="${clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE}"
 WEB_AUTH_ENDPOINT="${origin}/api/auth"
 KYC_SERVER="${origin}/api/kyc"
 SIGNING_KEY="${signingKey}"
@@ -20,7 +21,7 @@ ORG_URL="https://github.com/devodii/soroshares"
 
 [[CURRENCIES]]
 code="DPRI"
-issuer="${DPRI_ISSUER}"
+issuer="${clientEnv.NEXT_PUBLIC_DPRI_ISSUER}"
 is_asset_anchored=true
 anchor_asset_type="stock"
 anchor_asset="DPRI"

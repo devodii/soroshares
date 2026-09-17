@@ -1,10 +1,10 @@
 import { Keypair } from "@stellar/stellar-sdk";
-import { adminSecret, issuerSecret } from "@/lib/env";
+import { serverEnv } from "@/lib/env.server";
 
 export function issuerKeypair(): Keypair {
-  return Keypair.fromSecret(issuerSecret());
+  return Keypair.fromSecret(serverEnv.ISSUER_SECRET);
 }
 
 export function adminKeypair(): Keypair {
-  return Keypair.fromSecret(adminSecret());
+  return Keypair.fromSecret(serverEnv.ADMIN_SECRET);
 }

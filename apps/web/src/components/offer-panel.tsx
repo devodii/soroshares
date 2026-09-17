@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLatestLedger } from "@/hooks/use-latest-ledger";
 import { useOffer } from "@/hooks/use-offer";
-import { PRICE_NGN, PRICE_USDC } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
 
 const STROOP = 10_000_000;
 
@@ -50,7 +50,10 @@ export function OfferPanel() {
         <Badge variant={status.variant}>{status.label}</Badge>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
-        <Row label="Price per share" value={`₦${PRICE_NGN} / ${PRICE_USDC} USDC`} />
+        <Row
+          label="Price per share"
+          value={`₦${clientEnv.NEXT_PUBLIC_PRICE_NGN} / ${clientEnv.NEXT_PUBLIC_PRICE_USDC} USDC`}
+        />
         <Row label="Minimum shares" value="10" />
         <Row
           label="Close ledger"

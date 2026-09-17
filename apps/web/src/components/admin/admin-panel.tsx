@@ -12,7 +12,7 @@ import { useLatestLedger } from "@/hooks/use-latest-ledger";
 import { useOffer } from "@/hooks/use-offer";
 import { useWallet } from "@/hooks/use-wallet";
 import { getOfferClient } from "@/lib/contract";
-import { ADMIN_PUBLIC } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
 import { getErrorMessage } from "@/lib/error-message";
 import { formatLedgerCountdown } from "@/lib/format-duration";
 
@@ -26,7 +26,7 @@ export function AdminPanel() {
   const [submitting, setSubmitting] = React.useState(false);
   const [confirmRedeploy, setConfirmRedeploy] = React.useState(false);
 
-  const isAdmin = address === ADMIN_PUBLIC;
+  const isAdmin = address === clientEnv.NEXT_PUBLIC_ADMIN_PUBLIC;
 
   async function handleBootstrap(redeploy: boolean) {
     try {

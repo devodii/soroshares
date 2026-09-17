@@ -12,7 +12,7 @@ import { useLatestLedger } from "@/hooks/use-latest-ledger";
 import { useOffer } from "@/hooks/use-offer";
 import { useWallet } from "@/hooks/use-wallet";
 import { getOfferClient } from "@/lib/contract";
-import { MIN_SHARES, PRICE_NGN, PRICE_USDC } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
 import { getErrorMessage } from "@/lib/error-message";
 import { formatLedgerCountdown } from "@/lib/format-duration";
 
@@ -36,7 +36,7 @@ export function SubscribeStep() {
   const kycAccepted = kyc?.status === "ACCEPTED";
   const trustlineAuthorized = account?.dpriAuthorized ?? false;
   const offerClosed = Boolean(latestLedger && offer && latestLedger >= offer.close_ledger);
-  const cost = shares * PRICE_USDC;
+  const cost = shares * clientEnv.NEXT_PUBLIC_PRICE_USDC;
   const hasUsdcTrustline = account?.usdcTrustline ?? false;
   const insufficientUsdc = account ? Number(account.usdc) < cost : true;
 
@@ -106,14 +106,14 @@ export function SubscribeStep() {
             <Input
               id="shares"
               type="number"
-              min={MIN_SHARES}
+              min={clientEnv.NEXT_PUBLIC_MIN_SHARES}
               step={10}
               value={shares}
               onChange={(e) => setShares(Number(e.target.value))}
             />
           </div>
           <div className="text-sm text-muted-foreground">
-            ₦{(shares * PRICE_NGN).toLocaleString()} / {cost.toFixed(2)} USDC
+            ₦{(shares * clientEnv.NEXT_PUBLIC_PRICE_NGN).toLocaleString()} / {cost.toFixed(2)} USDC
           </div>
           <div className="text-sm text-muted-foreground">Fee: 0</div>
           <div className="text-sm font-medium">Total: {cost.toFixed(2)} USDC</div>

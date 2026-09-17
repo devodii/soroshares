@@ -1,8 +1,8 @@
 import { BASE_FEE, Horizon, Keypair, TransactionBuilder, rpc, xdr } from "@stellar/stellar-sdk";
-import { NETWORK_PASSPHRASE, HORIZON_URL, RPC_URL } from "./env";
+import { clientEnv } from "./env.client";
 
-export const horizonServer = new Horizon.Server(HORIZON_URL);
-export const rpcServer = new rpc.Server(RPC_URL);
+export const horizonServer = new Horizon.Server(clientEnv.NEXT_PUBLIC_HORIZON_URL);
+export const rpcServer = new rpc.Server(clientEnv.NEXT_PUBLIC_RPC_URL);
 
 export async function submitWithKeypair(
   sourceKeypair: Keypair,
@@ -11,7 +11,7 @@ export async function submitWithKeypair(
   const account = await horizonServer.loadAccount(sourceKeypair.publicKey());
   const builder = new TransactionBuilder(account, {
     fee: BASE_FEE,
-    networkPassphrase: NETWORK_PASSPHRASE,
+    networkPassphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
   }).setTimeout(60);
   for (const op of operations) builder.addOperation(op);
   const tx = builder.build();

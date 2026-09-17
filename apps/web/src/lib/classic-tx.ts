@@ -1,5 +1,5 @@
 import { BASE_FEE, TransactionBuilder, xdr } from "@stellar/stellar-sdk";
-import { NETWORK_PASSPHRASE } from "./env";
+import { clientEnv } from "./env.client";
 import { horizonServer } from "./stellar";
 
 export async function buildAndSign(
@@ -10,7 +10,7 @@ export async function buildAndSign(
   const account = await horizonServer.loadAccount(address);
   const builder = new TransactionBuilder(account, {
     fee: BASE_FEE,
-    networkPassphrase: NETWORK_PASSPHRASE,
+    networkPassphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
   }).setTimeout(60);
   for (const op of operations) builder.addOperation(op);
   const tx = builder.build();
@@ -23,7 +23,7 @@ export async function buildSignSubmit(
   signTransaction: (xdr: string) => Promise<string>,
 ): Promise<string> {
   const signedXdr = await buildAndSign(address, operations, signTransaction);
-  const signedTx = TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE);
+  const signedTx = TransactionBuilder.fromXDR(signedXdr, clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE);
   const result = await horizonServer.submitTransaction(signedTx);
   return result.hash;
 }

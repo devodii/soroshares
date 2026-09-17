@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ApiError, apiHandler } from "@/lib/api-handler";
-import { NETWORK_PASSPHRASE } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
 import { getErrorMessage } from "@/lib/error-message";
 import { issueToken } from "@/lib/jwt";
 import { buildChallenge, verifyChallenge } from "@/lib/sep10";
@@ -16,7 +16,7 @@ export const GET = apiHandler({
   handler: async ({ query }) => {
     try {
       const transaction = buildChallenge(query.account);
-      return { transaction, network_passphrase: NETWORK_PASSPHRASE };
+      return { transaction, network_passphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE };
     } catch (err) {
       throw new ApiError(400, "CHALLENGE_FAILED", getErrorMessage(err));
     }

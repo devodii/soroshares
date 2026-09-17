@@ -1,5 +1,5 @@
 import { Asset, BASE_FEE, Keypair, Operation, TransactionBuilder, rpc } from "@stellar/stellar-sdk";
-import { NETWORK_PASSPHRASE } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
 import { getErrorMessage } from "@/lib/error-message";
 
 // SAC addresses are deterministic, so if another account already wrapped this
@@ -10,7 +10,7 @@ export async function ensureStellarAssetContract(
   asset: Asset,
   sourceKeypair: Keypair,
 ): Promise<string> {
-  const expectedId = asset.contractId(NETWORK_PASSPHRASE);
+  const expectedId = asset.contractId(clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE);
 
   try {
     await rpcServer.getContractInstance(expectedId);
@@ -20,7 +20,7 @@ export async function ensureStellarAssetContract(
   const account = await rpcServer.getAccount(sourceKeypair.publicKey());
   const tx = new TransactionBuilder(account, {
     fee: BASE_FEE,
-    networkPassphrase: NETWORK_PASSPHRASE,
+    networkPassphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
   })
     .addOperation(Operation.createStellarAssetContract({ asset }))
     .setTimeout(60)

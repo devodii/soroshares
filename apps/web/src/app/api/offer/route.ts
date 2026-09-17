@@ -1,14 +1,14 @@
 import { Client } from "@soroshares/contract-client";
 import { apiHandler } from "@/lib/api-handler";
-import { NETWORK_PASSPHRASE, OFFER_CONTRACT, RPC_URL } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
 
 export const GET = apiHandler({
   rateLimit: 60,
   handler: async () => {
     const client = new Client({
-      contractId: OFFER_CONTRACT,
-      networkPassphrase: NETWORK_PASSPHRASE,
-      rpcUrl: RPC_URL,
+      contractId: clientEnv.NEXT_PUBLIC_OFFER_CONTRACT,
+      networkPassphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
+      rpcUrl: clientEnv.NEXT_PUBLIC_RPC_URL,
     });
     const tx = await client.get_offer();
     const offer = tx.result.unwrap();
@@ -23,7 +23,7 @@ export const GET = apiHandler({
       total_shares: offer.total_shares.toString(),
       finalized: offer.finalized,
       allotment_bps: offer.allotment_bps,
-      contract: OFFER_CONTRACT,
+      contract: clientEnv.NEXT_PUBLIC_OFFER_CONTRACT,
     };
   },
 });

@@ -9,7 +9,7 @@ import { useAccount } from "@/hooks/use-account";
 import { useWallet } from "@/hooks/use-wallet";
 import { apiFetch } from "@/lib/api-client";
 import { buildAndSign } from "@/lib/classic-tx";
-import { USDC_ISSUER } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
 import { getErrorMessage } from "@/lib/error-message";
 import { FAUCET_AMOUNT } from "@/lib/faucet";
 
@@ -46,12 +46,12 @@ export function ConnectWalletStep() {
         const signedXdr = await buildAndSign(
           address,
           [
-            Operation.changeTrust({ asset: new Asset("USDC", USDC_ISSUER) }),
+            Operation.changeTrust({ asset: new Asset("USDC", clientEnv.NEXT_PUBLIC_USDC_ISSUER) }),
             Operation.payment({
               destination: address,
-              asset: new Asset("USDC", USDC_ISSUER),
+              asset: new Asset("USDC", clientEnv.NEXT_PUBLIC_USDC_ISSUER),
               amount: FAUCET_AMOUNT,
-              source: USDC_ISSUER,
+              source: clientEnv.NEXT_PUBLIC_USDC_ISSUER,
             }),
           ],
           signTransaction,

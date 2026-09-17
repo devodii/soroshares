@@ -2,17 +2,17 @@ import { Networks } from "@creit.tech/stellar-wallets-kit";
 import { defaultModules } from "@creit.tech/stellar-wallets-kit/modules/utils";
 import { WalletConnectModule } from "@creit.tech/stellar-wallets-kit/modules/wallet-connect";
 import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit/sdk";
-import { NETWORK_PASSPHRASE, WALLETCONNECT_PROJECT_ID } from "./env";
+import { clientEnv } from "./env.client";
 
 let initialized = false;
 
 function ensureInitialized(selectedWalletId?: string): void {
   if (initialized) return;
   const modules = defaultModules();
-  if (WALLETCONNECT_PROJECT_ID) {
+  if (clientEnv.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID) {
     modules.push(
       new WalletConnectModule({
-        projectId: WALLETCONNECT_PROJECT_ID,
+        projectId: clientEnv.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
         metadata: {
           name: "soroshares",
           description: "DPRI public offer on Stellar (testnet)",
@@ -24,7 +24,7 @@ function ensureInitialized(selectedWalletId?: string): void {
   }
   StellarWalletsKit.init({
     modules,
-    network: NETWORK_PASSPHRASE as Networks,
+    network: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE as Networks,
     selectedWalletId,
   });
   initialized = true;
@@ -50,7 +50,7 @@ export async function disconnect(): Promise<void> {
 export async function signTransaction(xdr: string, address: string): Promise<string> {
   ensureInitialized();
   const { signedTxXdr } = await StellarWalletsKit.signTransaction(xdr, {
-    networkPassphrase: NETWORK_PASSPHRASE,
+    networkPassphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
     address,
   });
   return signedTxXdr;
@@ -59,7 +59,7 @@ export async function signTransaction(xdr: string, address: string): Promise<str
 export async function signAuthEntry(entryXdr: string, address: string): Promise<string> {
   ensureInitialized();
   const { signedAuthEntry } = await StellarWalletsKit.signAuthEntry(entryXdr, {
-    networkPassphrase: NETWORK_PASSPHRASE,
+    networkPassphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
     address,
   });
   return signedAuthEntry;

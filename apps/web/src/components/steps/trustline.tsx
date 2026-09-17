@@ -8,7 +8,7 @@ import { StepCard, StepStatus } from "@/components/step-card";
 import { useAccount } from "@/hooks/use-account";
 import { useWallet } from "@/hooks/use-wallet";
 import { buildSignSubmit } from "@/lib/classic-tx";
-import { DPRI_ISSUER } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
 import { getErrorMessage } from "@/lib/error-message";
 
 export function TrustlineStep() {
@@ -26,7 +26,7 @@ export function TrustlineStep() {
     try {
       const hash = await buildSignSubmit(
         address,
-        [Operation.changeTrust({ asset: new Asset("DPRI", DPRI_ISSUER) })],
+        [Operation.changeTrust({ asset: new Asset("DPRI", clientEnv.NEXT_PUBLIC_DPRI_ISSUER) })],
         signTransaction,
       );
       setTxHash(hash);

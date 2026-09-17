@@ -1,6 +1,6 @@
 import "server-only";
 import { scValToNative } from "@stellar/stellar-sdk";
-import { OFFER_CONTRACT } from "./env";
+import { clientEnv } from "./env.client";
 import { createRedisStore } from "./redis-store";
 import { rpcServer } from "./stellar";
 
@@ -30,7 +30,7 @@ async function discoverSubscriberAddresses(): Promise<Map<string, number>> {
     const chunkEnd = Math.min(chunkStart + CHUNK_LEDGERS, latest.sequence);
 
     const response = await rpcServer.getEvents({
-      filters: [{ contractIds: [OFFER_CONTRACT] }],
+      filters: [{ contractIds: [clientEnv.NEXT_PUBLIC_OFFER_CONTRACT] }],
       startLedger: chunkStart,
       limit: 1000,
     });

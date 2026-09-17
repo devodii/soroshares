@@ -2,13 +2,13 @@
 
 import { Client } from "@soroshares/contract-client";
 import { useQuery } from "@tanstack/react-query";
-import { NETWORK_PASSPHRASE, OFFER_CONTRACT, RPC_URL } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
 
 function readOnlyClient(): Client {
   return new Client({
-    contractId: OFFER_CONTRACT,
-    networkPassphrase: NETWORK_PASSPHRASE,
-    rpcUrl: RPC_URL,
+    contractId: clientEnv.NEXT_PUBLIC_OFFER_CONTRACT,
+    networkPassphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
+    rpcUrl: clientEnv.NEXT_PUBLIC_RPC_URL,
   });
 }
 

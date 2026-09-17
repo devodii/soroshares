@@ -1,5 +1,6 @@
 import { Asset, BASE_FEE, Keypair, Operation, TransactionBuilder } from "@stellar/stellar-sdk";
-import { DPRI_ISSUER, NETWORK_PASSPHRASE, issuerSecret } from "./env";
+import { clientEnv } from "./env.client";
+import { serverEnv } from "./env.server";
 import { horizonServer } from "./stellar";
 
 export type AuthorizeResult =
@@ -8,7 +9,7 @@ export type AuthorizeResult =
   | { status: "NEEDS_TRUSTLINE" };
 
 export async function authorizeDpriTrustline(account: string): Promise<AuthorizeResult> {
-  const dpri = new Asset("DPRI", DPRI_ISSUER);
+  const dpri = new Asset("DPRI", clientEnv.NEXT_PUBLIC_DPRI_ISSUER);
   const accountRecord = await horizonServer.loadAccount(account).catch((err) => {
     if (err?.response?.status === 404) return null;
     throw err;
@@ -23,11 +24,11 @@ export async function authorizeDpriTrustline(account: string): Promise<Authorize
   if (!trustline) return { status: "NEEDS_TRUSTLINE" };
   if (trustline.is_authorized) return { status: "ALREADY_AUTHORIZED" };
 
-  const issuerKeypair = Keypair.fromSecret(issuerSecret());
+  const issuerKeypair = Keypair.fromSecret(serverEnv.ISSUER_SECRET);
   const issuerAccount = await horizonServer.loadAccount(issuerKeypair.publicKey());
   const tx = new TransactionBuilder(issuerAccount, {
     fee: BASE_FEE,
-    networkPassphrase: NETWORK_PASSPHRASE,
+    networkPassphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
   })
     .addOperation(
       Operation.setTrustLineFlags({

@@ -1,36 +1,37 @@
 import { Keypair, WebAuth } from "@stellar/stellar-sdk";
-import { HOME_DOMAIN, NETWORK_PASSPHRASE, serverSigningSecret } from "./env";
+import { clientEnv } from "./env.client";
+import { serverEnv } from "./env.server";
 
 const CHALLENGE_TIMEOUT_SECONDS = 300;
 
 export function buildChallenge(clientAccountId: string): string {
-  const serverKeypair = Keypair.fromSecret(serverSigningSecret());
+  const serverKeypair = Keypair.fromSecret(serverEnv.SERVER_SIGNING_SECRET);
   return WebAuth.buildChallengeTx(
     serverKeypair,
     clientAccountId,
-    HOME_DOMAIN,
+    clientEnv.NEXT_PUBLIC_HOME_DOMAIN,
     CHALLENGE_TIMEOUT_SECONDS,
-    NETWORK_PASSPHRASE,
-    HOME_DOMAIN,
+    clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
+    clientEnv.NEXT_PUBLIC_HOME_DOMAIN,
   );
 }
 
 export function verifyChallenge(challengeXdr: string): string {
-  const serverPublicKey = Keypair.fromSecret(serverSigningSecret()).publicKey();
+  const serverPublicKey = Keypair.fromSecret(serverEnv.SERVER_SIGNING_SECRET).publicKey();
   const { clientAccountID } = WebAuth.readChallengeTx(
     challengeXdr,
     serverPublicKey,
-    NETWORK_PASSPHRASE,
-    HOME_DOMAIN,
-    HOME_DOMAIN,
+    clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
+    clientEnv.NEXT_PUBLIC_HOME_DOMAIN,
+    clientEnv.NEXT_PUBLIC_HOME_DOMAIN,
   );
   WebAuth.verifyChallengeTxSigners(
     challengeXdr,
     serverPublicKey,
-    NETWORK_PASSPHRASE,
+    clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
     [clientAccountID],
-    HOME_DOMAIN,
-    HOME_DOMAIN,
+    clientEnv.NEXT_PUBLIC_HOME_DOMAIN,
+    clientEnv.NEXT_PUBLIC_HOME_DOMAIN,
   );
   return clientAccountID;
 }

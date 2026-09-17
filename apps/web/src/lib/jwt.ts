@@ -1,8 +1,8 @@
 import { jwtVerify, SignJWT } from "jose";
-import { jwtSecret } from "./env";
+import { serverEnv } from "./env.server";
 
 function secretKey(): Uint8Array {
-  return new TextEncoder().encode(jwtSecret());
+  return new TextEncoder().encode(serverEnv.JWT_SECRET);
 }
 
 export async function issueToken(account: string): Promise<string> {

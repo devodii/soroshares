@@ -1,7 +1,7 @@
 import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { adminUiPassword } from "./env";
+import { serverEnv } from "./env.server";
 import { createRedisStore } from "./redis-store";
 import { bearerToken, verifyAdminSession, verifyToken } from "./jwt";
 
@@ -107,7 +107,7 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
         } catch {
           throw new ApiError(401, "UNAUTHORIZED", "cron secret required");
         }
-        if (token !== adminUiPassword()) {
+        if (token !== serverEnv.ADMIN_UI_PASSWORD) {
           throw new ApiError(401, "UNAUTHORIZED", "cron secret required");
         }
       }

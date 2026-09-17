@@ -6,7 +6,7 @@ import { ConnectWalletStep } from "@/components/steps/connect-wallet";
 import { KycStep } from "@/components/steps/kyc";
 import { SubscribeStep } from "@/components/steps/subscribe";
 import { TrustlineStep } from "@/components/steps/trustline";
-import { DPRI_ISSUER, OFFER_CONTRACT } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
 
 export default function Home() {
   return (
@@ -42,7 +42,7 @@ export default function Home() {
           GitHub
         </a>
         <a
-          href={`https://stellar.expert/explorer/testnet/contract/${OFFER_CONTRACT}`}
+          href={`https://stellar.expert/explorer/testnet/contract/${clientEnv.NEXT_PUBLIC_OFFER_CONTRACT}`}
           target="_blank"
           rel="noreferrer"
           className="underline underline-offset-2"
@@ -50,7 +50,7 @@ export default function Home() {
           Contract
         </a>
         <a
-          href={`https://stellar.expert/explorer/testnet/account/${DPRI_ISSUER}`}
+          href={`https://stellar.expert/explorer/testnet/account/${clientEnv.NEXT_PUBLIC_DPRI_ISSUER}`}
           target="_blank"
           rel="noreferrer"
           className="underline underline-offset-2"

@@ -1,6 +1,6 @@
 import { BASE_FEE, Keypair, Operation, TransactionBuilder, hash, rpc } from "@stellar/stellar-sdk";
 import { Client as OfferClient } from "@soroshares/contract-client";
-import { NETWORK_PASSPHRASE, RPC_URL } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
 import { publicOfferWasm } from "./wasm";
 
 async function ensureWasmInstalled(rpcServer: rpc.Server, keypair: Keypair): Promise<Uint8Array> {
@@ -15,7 +15,7 @@ async function ensureWasmInstalled(rpcServer: rpc.Server, keypair: Keypair): Pro
   const account = await rpcServer.getAccount(keypair.publicKey());
   const tx = new TransactionBuilder(account, {
     fee: BASE_FEE,
-    networkPassphrase: NETWORK_PASSPHRASE,
+    networkPassphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
   })
     .addOperation(Operation.uploadContractWasm({ wasm: wasmBytes }))
     .setTimeout(60)
@@ -48,8 +48,8 @@ export async function deployOfferContract(
 
   const deployTx = await OfferClient.deploy({
     wasmHash: Buffer.from(wasmHash),
-    networkPassphrase: NETWORK_PASSPHRASE,
-    rpcUrl: RPC_URL,
+    networkPassphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
+    rpcUrl: clientEnv.NEXT_PUBLIC_RPC_URL,
     publicKey: params.admin.publicKey(),
     signTransaction: params.admin,
   });
@@ -73,8 +73,8 @@ export async function deployOfferContract(
 export async function loadExistingOffer(contractId: string, admin: Keypair): Promise<OfferClient> {
   return OfferClient.from({
     contractId,
-    networkPassphrase: NETWORK_PASSPHRASE,
-    rpcUrl: RPC_URL,
+    networkPassphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
+    rpcUrl: clientEnv.NEXT_PUBLIC_RPC_URL,
     publicKey: admin.publicKey(),
     signTransaction: admin,
   });

@@ -7,7 +7,8 @@ import {
   Operation,
   contract,
 } from "@stellar/stellar-sdk";
-import { NETWORK_PASSPHRASE, RPC_URL, USE_MOCK_USDC, mockUsdcIssuerSecret } from "@/lib/env";
+import { clientEnv } from "@/lib/env.client";
+import { serverEnv } from "@/lib/env.server";
 import { horizonServer, rpcServer, submitWithKeypair } from "@/lib/stellar";
 import { findTrustline } from "@/lib/trustline";
 import { deployOfferContract, loadExistingOffer } from "./deploy-contract";
@@ -57,11 +58,13 @@ export async function runBootstrap(options: RunBootstrapOptions = {}): Promise<B
   await ensureIssuerFlags(issuer);
   const dpriSac = await ensureStellarAssetContract(rpcServer, dpri, admin);
 
-  const usdcIssuerKeypair = USE_MOCK_USDC ? Keypair.fromSecret(mockUsdcIssuerSecret()) : admin;
-  const usdcIssuerPublicKey = USE_MOCK_USDC
+  const usdcIssuerKeypair = serverEnv.USE_MOCK_USDC
+    ? Keypair.fromSecret(serverEnv.MOCK_USDC_ISSUER_SECRET)
+    : admin;
+  const usdcIssuerPublicKey = serverEnv.USE_MOCK_USDC
     ? usdcIssuerKeypair.publicKey()
     : CIRCLE_TESTNET_USDC_ISSUER;
-  if (USE_MOCK_USDC) await ensureFunded(usdcIssuerPublicKey);
+  if (serverEnv.USE_MOCK_USDC) await ensureFunded(usdcIssuerPublicKey);
   const usdc = new Asset("USDC", usdcIssuerPublicKey);
   const usdcSac = await ensureStellarAssetContract(rpcServer, usdc, usdcIssuerKeypair);
 
@@ -162,8 +165,8 @@ async function ensureContractAuthorizedAndFunded(
 ): Promise<void> {
   const dpriTokenClient = await contract.Client.from<TokenAdminClient>({
     contractId: dpriSac,
-    networkPassphrase: NETWORK_PASSPHRASE,
-    rpcUrl: RPC_URL,
+    networkPassphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
+    rpcUrl: clientEnv.NEXT_PUBLIC_RPC_URL,
     publicKey: issuer.publicKey(),
     signTransaction: issuer,
   });
