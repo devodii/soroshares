@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StepCard, StepStatus } from "@/components/step-card";
 import { useAccount } from "@/hooks/use-account";
+import { useCountdown } from "@/hooks/use-countdown";
 import { useKycStatus } from "@/hooks/use-kyc";
 import { useLatestLedger } from "@/hooks/use-latest-ledger";
 import { useOffer } from "@/hooks/use-offer";
@@ -18,7 +19,7 @@ import { useWallet } from "@/hooks/use-wallet";
 import { getOfferClient } from "@/lib/contract";
 import { clientEnv } from "@/lib/env.client";
 import { getErrorMessage } from "@/lib/error-message";
-import { formatLedgerCountdown } from "@/lib/format-duration";
+import { formatCountdownClock } from "@/lib/format-duration";
 
 const STROOP = 10_000_000n;
 
@@ -37,6 +38,7 @@ export function SubscribeStep() {
   const { data: kyc } = useKycStatus(token);
   const { data: offer, refetch: refetchOffer } = useOffer();
   const { data: latestLedger } = useLatestLedger();
+  const remainingMs = useCountdown(offer?.close_ledger, latestLedger);
 
   const form = useForm<SubscribeFormValues>({
     resolver: zodResolver(subscribeSchema),
@@ -110,7 +112,7 @@ export function SubscribeStep() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
           {latestLedger && offer && !offerClosed && (
             <p className="text-sm text-muted-foreground">
-              Offer closes in ~{formatLedgerCountdown(offer.close_ledger - latestLedger)}
+              Offer closes in {formatCountdownClock(remainingMs)}
             </p>
           )}
           <div className="space-y-1">

@@ -5,13 +5,14 @@ import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StepCard, StepStatus } from "@/components/step-card";
+import { useCountdown } from "@/hooks/use-countdown";
 import { useLatestLedger } from "@/hooks/use-latest-ledger";
 import { useOffer } from "@/hooks/use-offer";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useWallet } from "@/hooks/use-wallet";
 import { getOfferClient } from "@/lib/contract";
 import { getErrorMessage } from "@/lib/error-message";
-import { formatLedgerCountdown } from "@/lib/format-duration";
+import { formatCountdownClock } from "@/lib/format-duration";
 
 const STROOP = 10_000_000n;
 
@@ -20,6 +21,7 @@ export function ClaimStep() {
   const { data: offer, refetch: refetchOffer } = useOffer();
   const { data: latestLedger } = useLatestLedger();
   const { data: subscription, refetch: refetchSubscription } = useSubscription(address);
+  const remainingMs = useCountdown(offer?.close_ledger, latestLedger);
   const [submitting, setSubmitting] = React.useState(false);
   const [result, setResult] = React.useState<{ kind: "claim" | "refund"; txHash: string } | null>(
     null,
@@ -100,9 +102,7 @@ export function ClaimStep() {
           {!closed && (
             <p className="text-sm text-muted-foreground">
               Waiting for close
-              {latestLedger && offer
-                ? ` — ~${formatLedgerCountdown(offer.close_ledger - latestLedger)} left`
-                : ""}
+              {latestLedger && offer ? ` — ${formatCountdownClock(remainingMs)} left` : ""}
             </p>
           )}
           {closed && !offer?.finalized && !canRefund && (

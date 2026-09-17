@@ -4,9 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCountdown } from "@/hooks/use-countdown";
 import { useLatestLedger } from "@/hooks/use-latest-ledger";
 import { useOffer } from "@/hooks/use-offer";
 import { clientEnv } from "@/lib/env.client";
+import { formatCountdownClock } from "@/lib/format-duration";
 
 const STROOP = 10_000_000;
 
@@ -22,6 +24,7 @@ function offerStatus(
 export function OfferPanel() {
   const { data: offer, isLoading } = useOffer();
   const { data: latestLedger } = useLatestLedger();
+  const remainingMs = useCountdown(offer?.close_ledger, latestLedger);
 
   if (isLoading || !offer) {
     return (
@@ -40,7 +43,6 @@ export function OfferPanel() {
 
   const closed = Boolean(latestLedger && latestLedger >= offer.close_ledger);
   const status = offerStatus(offer.finalized, closed);
-  const remainingLedgers = latestLedger ? Math.max(offer.close_ledger - latestLedger, 0) : null;
   const totalShares = Number(BigInt(offer.total_shares) / BigInt(STROOP));
 
   return (
@@ -58,11 +60,11 @@ export function OfferPanel() {
         <Row
           label="Close ledger"
           value={
-            remainingLedgers === null
+            !latestLedger
               ? String(offer.close_ledger)
               : closed
                 ? `${offer.close_ledger} (closed)`
-                : `${offer.close_ledger} (~${remainingLedgers * 5}s)`
+                : `${offer.close_ledger} (${formatCountdownClock(remainingMs)})`
           }
         />
         <Row label="Total subscribed" value={`${totalShares.toLocaleString()} shares`} />
