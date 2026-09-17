@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Space_Grotesk } from "next/font/google";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { GithubIcon } from "@/components/icons/github";
+import { cn } from "cn";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -35,6 +38,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <span className="font-semibold">soroshares</span>
               <div className="flex items-center gap-2">
                 <Badge variant="outline">Testnet</Badge>
+                <a
+                  href="https://github.com/devodii/soroshares"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="View source on GitHub"
+                  className={cn(buttonVariants({ variant: "outline", size: "icon" }))}
+                >
+                  <GithubIcon className="size-4" />
+                </a>
                 <ThemeToggle />
               </div>
             </div>
