@@ -39,6 +39,8 @@ pnpm --dir apps/web dev
 
 Set `apps/web/.env.local` (see `.env.local.example`) with at minimum `ISSUER_SECRET`, `ADMIN_SECRET`, `SERVER_SIGNING_SECRET`, `JWT_SECRET`, `ADMIN_UI_PASSWORD`. Each is just a fresh Stellar keypair secret or random string; `GET /api/admin/new-secret` generates them, no CLI needed.
 
+Rate limiting, KYC records, idempotency and the bootstrap state are stored in Redis. Create a free store at [upstash.com](https://upstash.com) (or add the Upstash integration from the Vercel Marketplace if deploying there) and set `KV_REST_API_URL` / `KV_REST_API_TOKEN` in `.env.local`.
+
 Log into `/admin` and press **Run bootstrap**. It funds the issuer and admin via Friendbot, issues DPRI, wraps DPRI and USDC into their Stellar Asset Contracts, deploys and initializes `public_offer`, and funds it with shares. Idempotent, safe to press again. Copy the returned addresses into the `NEXT_PUBLIC_*` values in `.env.local` and restart.
 
 ### Redeploying for a fresh demo run
