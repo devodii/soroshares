@@ -2,6 +2,7 @@
 
 import { Asset, NotFoundError } from "@stellar/stellar-sdk";
 import { useQuery } from "@tanstack/react-query";
+import { Result } from "better-result";
 import { clientEnv } from "@/lib/env.client";
 import { horizonServer } from "@/lib/stellar";
 import { findTrustline } from "@/lib/trustline";
@@ -16,21 +17,10 @@ export interface AccountBalances {
 }
 
 async function fetchAccount(address: string): Promise<AccountBalances> {
-  try {
-    const account = await horizonServer.loadAccount(address);
-    const native = account.balances.find((b) => b.asset_type === "native");
-    const usdc = findTrustline(account.balances, new Asset("USDC", clientEnv.NEXT_PUBLIC_USDC_ISSUER));
-    const dpri = findTrustline(account.balances, new Asset("DPRI", clientEnv.NEXT_PUBLIC_DPRI_ISSUER));
-    return {
-      exists: true,
-      xlm: native?.balance ?? "0",
-      usdc: usdc?.balance ?? "0",
-      usdcTrustline: Boolean(usdc),
-      dpri: dpri?.balance ?? "0",
-      dpriAuthorized: dpri?.is_authorized ?? false,
-    };
-  } catch (err) {
-    if (err instanceof NotFoundError) {
+  const result = await Result.tryPromise(() => horizonServer.loadAccount(address));
+
+  if (result.isErr()) {
+    if (result.error instanceof NotFoundError) {
       return {
         exists: false,
         xlm: "0",
@@ -40,8 +30,21 @@ async function fetchAccount(address: string): Promise<AccountBalances> {
         dpriAuthorized: false,
       };
     }
-    throw err;
+    throw result.error;
   }
+
+  const account = result.value;
+  const native = account.balances.find((b) => b.asset_type === "native");
+  const usdc = findTrustline(account.balances, new Asset("USDC", clientEnv.NEXT_PUBLIC_USDC_ISSUER));
+  const dpri = findTrustline(account.balances, new Asset("DPRI", clientEnv.NEXT_PUBLIC_DPRI_ISSUER));
+  return {
+    exists: true,
+    xlm: native?.balance ?? "0",
+    usdc: usdc?.balance ?? "0",
+    usdcTrustline: Boolean(usdc),
+    dpri: dpri?.balance ?? "0",
+    dpriAuthorized: dpri?.is_authorized ?? false,
+  };
 }
 
 export function useAccount(address: string | null) {

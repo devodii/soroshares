@@ -1,5 +1,6 @@
 import { BASE_FEE, Keypair, Operation, TransactionBuilder, hash, rpc } from "@stellar/stellar-sdk";
 import { Client as OfferClient } from "@soroshares/contract-client";
+import { Result } from "better-result";
 import { clientEnv } from "@/lib/env.client";
 import { publicOfferWasm } from "./wasm";
 
@@ -7,10 +8,8 @@ async function ensureWasmInstalled(rpcServer: rpc.Server, keypair: Keypair): Pro
   const wasmBytes = publicOfferWasm();
   const wasmHash = hash(wasmBytes);
 
-  try {
-    await rpcServer.getContractWasmByHash(wasmHash);
-    return wasmHash;
-  } catch {}
+  const existing = await Result.tryPromise(() => rpcServer.getContractWasmByHash(wasmHash));
+  if (existing.isOk()) return wasmHash;
 
   const account = await rpcServer.getAccount(keypair.publicKey());
   const tx = new TransactionBuilder(account, {

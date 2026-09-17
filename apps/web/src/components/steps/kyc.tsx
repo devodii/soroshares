@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Asset, Operation } from "@stellar/stellar-sdk";
+import { Result } from "better-result";
 import * as React from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
@@ -77,7 +78,7 @@ export function KycStep() {
 
   async function handleSignIn() {
     if (!address) return;
-    try {
+    const result = await Result.tryPromise(async () => {
       const needsTrustline = !account?.usdcTrustline;
       const needsTopUp = needsTrustline || Number(account?.usdc ?? "0") < USDC_TOPUP_FLOOR;
 
@@ -113,28 +114,27 @@ export function KycStep() {
       setStage("Signing in…");
       refetchAccount();
       await signIn();
-    } catch (err) {
-      toast.error("Sign in failed", {
-        description: getErrorMessage(err),
-      });
-    } finally {
-      setStage(null);
-    }
+    });
+    result.tapError((err) => {
+      toast.error("Sign in failed", { description: getErrorMessage(err) });
+    });
+    setStage(null);
   }
 
   async function onSubmit(values: KycFormValues) {
-    try {
-      const record = await submitKyc.mutateAsync(values);
-      if (record.status === "REJECTED") {
-        toast.error("KYC rejected", { description: record.message });
-      } else {
-        toast.success("KYC submitted");
-      }
-    } catch (err) {
-      toast.error("KYC submission failed", {
-        description: getErrorMessage(err),
-      });
-    }
+    const result = await Result.tryPromise(() => submitKyc.mutateAsync(values));
+    result.match({
+      ok: (record) => {
+        if (record.status === "REJECTED") {
+          toast.error("KYC rejected", { description: record.message });
+        } else {
+          toast.success("KYC submitted");
+        }
+      },
+      err: (err) => {
+        toast.error("KYC submission failed", { description: getErrorMessage(err) });
+      },
+    });
   }
 
   return (

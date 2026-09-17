@@ -1,6 +1,7 @@
 "use client";
 
 import { Asset, Operation } from "@stellar/stellar-sdk";
+import { Result } from "better-result";
 import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -25,57 +26,55 @@ export function ConnectWalletStep() {
   const status: StepStatus = address ? "done" : "active";
 
   async function handleConnect() {
-    try {
-      await connect();
-    } catch (err) {
-      toast.error("Connect failed", {
-        description: getErrorMessage(err),
-      });
-    }
+    const result = await Result.tryPromise(() => connect());
+    result.tapError((err) => {
+      toast.error("Connect failed", { description: getErrorMessage(err) });
+    });
   }
 
   async function handleFund() {
     if (!address) return;
     setFunding(true);
-    try {
+
+    const friendbotResult = await Result.tryPromise(async () => {
       const res = await fetch(`https://friendbot.stellar.org?addr=${address}`);
       if (!res.ok) throw new Error(await res.text());
-      toast.success("Funded with Friendbot");
+    });
 
-      try {
-        const signedXdr = await buildAndSign(
-          address,
-          [
-            Operation.changeTrust({ asset: new Asset("USDC", clientEnv.NEXT_PUBLIC_USDC_ISSUER) }),
-            Operation.payment({
-              destination: address,
-              asset: new Asset("USDC", clientEnv.NEXT_PUBLIC_USDC_ISSUER),
-              amount: FAUCET_AMOUNT,
-              source: clientEnv.NEXT_PUBLIC_USDC_ISSUER,
-            }),
-          ],
-          signTransaction,
-        );
-        await apiFetch("/api/faucet/usdc", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ signedXdr }),
-        });
-        toast.success("Funded with test USDC");
-      } catch (err) {
-        toast.error("USDC funding failed", {
-          description: getErrorMessage(err),
-        });
-      }
-
-      refetch();
-    } catch (err) {
-      toast.error("Friendbot failed", {
-        description: getErrorMessage(err),
-      });
-    } finally {
+    if (friendbotResult.isErr()) {
+      toast.error("Friendbot failed", { description: getErrorMessage(friendbotResult.error) });
       setFunding(false);
+      return;
     }
+    toast.success("Funded with Friendbot");
+
+    const usdcResult = await Result.tryPromise(async () => {
+      const signedXdr = await buildAndSign(
+        address,
+        [
+          Operation.changeTrust({ asset: new Asset("USDC", clientEnv.NEXT_PUBLIC_USDC_ISSUER) }),
+          Operation.payment({
+            destination: address,
+            asset: new Asset("USDC", clientEnv.NEXT_PUBLIC_USDC_ISSUER),
+            amount: FAUCET_AMOUNT,
+            source: clientEnv.NEXT_PUBLIC_USDC_ISSUER,
+          }),
+        ],
+        signTransaction,
+      );
+      await apiFetch("/api/faucet/usdc", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ signedXdr }),
+      });
+    });
+    usdcResult.match({
+      ok: () => toast.success("Funded with test USDC"),
+      err: (err) => toast.error("USDC funding failed", { description: getErrorMessage(err) }),
+    });
+
+    refetch();
+    setFunding(false);
   }
 
   return (

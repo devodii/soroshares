@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Result } from "better-result";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -25,16 +26,17 @@ export function AdminLoginForm() {
   });
 
   async function onSubmit(values: LoginFormValues) {
-    try {
-      await apiFetch("/api/admin/login", {
+    const result = await Result.tryPromise(() =>
+      apiFetch("/api/admin/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(values),
-      });
-      router.refresh();
-    } catch (err) {
-      form.setError("password", { message: getErrorMessage(err) });
-    }
+      }),
+    );
+    result.match({
+      ok: () => router.refresh(),
+      err: (err) => form.setError("password", { message: getErrorMessage(err) }),
+    });
   }
 
   return (

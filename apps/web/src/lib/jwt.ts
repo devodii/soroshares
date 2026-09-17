@@ -35,12 +35,11 @@ export async function issueAdminSession(): Promise<string> {
 
 export async function verifyAdminSession(token: string | undefined): Promise<boolean> {
   if (!token) return false;
-  try {
+  const result = await Result.tryPromise(async () => {
     const { payload } = await jwtVerify(token, secretKey());
     return payload.role === "admin";
-  } catch {
-    return false;
-  }
+  });
+  return result.unwrapOr(false);
 }
 
 export function bearerToken(authorizationHeader: string | null): string {

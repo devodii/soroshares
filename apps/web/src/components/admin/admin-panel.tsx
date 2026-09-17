@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Result } from "better-result";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -41,22 +42,22 @@ export function AdminPanel() {
   const isAdmin = address === clientEnv.NEXT_PUBLIC_ADMIN_PUBLIC;
 
   async function handleBootstrap(redeploy: boolean) {
-    try {
-      await runBootstrap.mutateAsync({ redeploy });
-      toast.success(redeploy ? "Redeployed a fresh offer" : "Bootstrap complete");
-      refetch();
-    } catch (err) {
-      toast.error("Bootstrap failed", {
-        description: getErrorMessage(err),
-      });
-    } finally {
-      setConfirmRedeploy(false);
-    }
+    const result = await Result.tryPromise(() => runBootstrap.mutateAsync({ redeploy }));
+    result.match({
+      ok: () => {
+        toast.success(redeploy ? "Redeployed a fresh offer" : "Bootstrap complete");
+        refetch();
+      },
+      err: (err) => {
+        toast.error("Bootstrap failed", { description: getErrorMessage(err) });
+      },
+    });
+    setConfirmRedeploy(false);
   }
 
   async function onFinalize(values: FinalizeFormValues) {
     if (!address) return;
-    try {
+    const result = await Result.tryPromise(async () => {
       const client = getOfferClient(address, signTransaction, signAuthEntry);
       const tx = await client.finalize({
         admin: address,
@@ -64,30 +65,37 @@ export function AdminPanel() {
       });
       const sent = await tx.signAndSend();
       sent.result.unwrap();
-      toast.success("Offer finalized");
-      refetch();
-    } catch (err) {
-      finalizeForm.setError("allotmentPct", { message: getErrorMessage(err) });
-    }
+    });
+    result.match({
+      ok: () => {
+        toast.success("Offer finalized");
+        refetch();
+      },
+      err: (err) => {
+        finalizeForm.setError("allotmentPct", { message: getErrorMessage(err) });
+      },
+    });
   }
 
   async function handleWithdraw() {
     if (!address) return;
     setSubmitting(true);
-    try {
+    const result = await Result.tryPromise(async () => {
       const client = getOfferClient(address, signTransaction, signAuthEntry);
       const tx = await client.withdraw_proceeds({ admin: address, to: address });
       const sent = await tx.signAndSend();
       sent.result.unwrap();
-      toast.success("Proceeds withdrawn");
-      refetch();
-    } catch (err) {
-      toast.error("Withdraw failed", {
-        description: getErrorMessage(err),
-      });
-    } finally {
-      setSubmitting(false);
-    }
+    });
+    result.match({
+      ok: () => {
+        toast.success("Proceeds withdrawn");
+        refetch();
+      },
+      err: (err) => {
+        toast.error("Withdraw failed", { description: getErrorMessage(err) });
+      },
+    });
+    setSubmitting(false);
   }
 
   return (
