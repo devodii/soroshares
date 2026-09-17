@@ -40,7 +40,7 @@ export function MarkdownDialog({ title, content }: MarkdownDialogProps) {
       <DialogTrigger render={<Button variant="outline" size="icon" aria-label={title} />}>
         <CircleHelpIcon className="size-4" />
       </DialogTrigger>
-      <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
