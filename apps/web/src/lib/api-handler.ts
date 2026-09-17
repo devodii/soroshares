@@ -1,6 +1,7 @@
 import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { adminUiPassword } from "./env";
 import { createRedisStore } from "./redis-store";
 import { bearerToken, verifyAdminSession, verifyToken } from "./jwt";
 
@@ -75,7 +76,7 @@ export interface HandlerConfig<TBody, TQuery> {
     body?: z.ZodType<TBody>;
     query?: z.ZodType<TQuery>;
   };
-  auth?: "admin";
+  auth?: "admin" | "cron";
   /** Requests per minute per client IP + route. */
   rateLimit?: number;
   handler: (args: HandlerArgs<TBody, TQuery>) => Promise<unknown>;
@@ -98,6 +99,17 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
       if (config.auth === "admin") {
         const authorized = await verifyAdminSession(req.cookies.get("admin_session")?.value);
         if (!authorized) throw new ApiError(401, "UNAUTHORIZED", "admin session required");
+      }
+      if (config.auth === "cron") {
+        let token: string;
+        try {
+          token = bearerToken(req.headers.get("authorization"));
+        } catch {
+          throw new ApiError(401, "UNAUTHORIZED", "cron secret required");
+        }
+        if (token !== adminUiPassword()) {
+          throw new ApiError(401, "UNAUTHORIZED", "cron secret required");
+        }
       }
 
       const limit = config.rateLimit ?? DEFAULT_RATE_LIMIT;
