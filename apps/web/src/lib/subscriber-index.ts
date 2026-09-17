@@ -8,9 +8,14 @@ interface SubscriberRecord {
   firstSeenLedger: number;
 }
 
+interface ScanState {
+  lastScannedLedger: number;
+}
+
 // Soroban RPC only retains ~120,960 ledgers (~7 days) of events. The offer
 // runs for up to 30 days, so we persist discovered addresses in Redis and
-// re-scan a safe window on every sweep, well before any event ages out.
+// re-scan forward from the last scanned ledger on every sweep, well before
+// any event ages out — a cold run falls back to the full lookback window.
 //
 // A single getEvents call with a wide startLedger silently returns fewer
 // events (sometimes zero) than a narrower one covering the same range on
@@ -18,14 +23,16 @@ interface SubscriberRecord {
 // small bounded chunks is what actually surfaces all events reliably.
 const DISCOVERY_LOOKBACK_LEDGERS = 100_000;
 const CHUNK_LEDGERS = 5_000;
+const SCAN_STATE_KEY = "current";
 
 const store = createRedisStore<SubscriberRecord>("subscribers");
+const scanStateStore = createRedisStore<ScanState>("subscriber-scan-state");
 
-async function discoverSubscriberAddresses(): Promise<Map<string, number>> {
+async function discoverSubscriberAddresses(startLedger: number): Promise<Map<string, number>> {
   const latest = await rpcServer.getLatestLedger();
   const found = new Map<string, number>();
 
-  let chunkStart = Math.max(latest.sequence - DISCOVERY_LOOKBACK_LEDGERS, 1);
+  let chunkStart = startLedger;
   while (chunkStart < latest.sequence) {
     const chunkEnd = Math.min(chunkStart + CHUNK_LEDGERS, latest.sequence);
 
@@ -54,7 +61,12 @@ async function discoverSubscriberAddresses(): Promise<Map<string, number>> {
 }
 
 export async function refreshSubscriberIndex(): Promise<string[]> {
-  const discovered = await discoverSubscriberAddresses();
+  const latest = await rpcServer.getLatestLedger();
+  const scanState = await scanStateStore.get(SCAN_STATE_KEY);
+  const retentionFloor = latest.sequence - DISCOVERY_LOOKBACK_LEDGERS;
+  const startLedger = Math.max(scanState?.lastScannedLedger ?? 0, retentionFloor, 1);
+
+  const discovered = await discoverSubscriberAddresses(startLedger);
   const existing = await store.all();
 
   for (const [address, ledger] of discovered) {
@@ -62,6 +74,8 @@ export async function refreshSubscriberIndex(): Promise<string[]> {
       await store.set(address, { firstSeenLedger: ledger });
     }
   }
+
+  await scanStateStore.set(SCAN_STATE_KEY, { lastScannedLedger: latest.sequence });
 
   const merged = await store.all();
   return Object.keys(merged);

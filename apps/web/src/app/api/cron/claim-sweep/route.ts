@@ -9,6 +9,17 @@ import { refreshSubscriberIndex } from "@/lib/subscriber-index";
 
 export const maxDuration = 300;
 
+type Action = "claim" | "refund";
+
+// Every write here shares one admin source account, and Soroban transactions
+// from a single account must use strictly sequential sequence numbers — so
+// unlike the read checks below, these can't be parallelized with Promise.all.
+function actionFor(offer: { finalized: boolean }, graceElapsed: boolean): Action | null {
+  if (offer.finalized) return "claim";
+  if (graceElapsed) return "refund";
+  return null;
+}
+
 export const GET = apiHandler({
   auth: "cron",
   rateLimit: 5,
@@ -29,36 +40,43 @@ export const GET = apiHandler({
     ]);
     const offer = offerTx.result.unwrap();
     const graceElapsed = latest.sequence >= offer.close_ledger + offer.grace_ledgers;
+    const action = actionFor(offer, graceElapsed);
 
     const claimed: string[] = [];
     const refunded: string[] = [];
     let skipped = 0;
     const errors: { address: string; message: string }[] = [];
 
-    for (const address of subscribers) {
-      try {
-        const hasClaimedTx = await client.has_claimed({ subscriber: address });
-        if (hasClaimedTx.result) {
-          skipped += 1;
-          continue;
-        }
-        const subscribedTx = await client.get_subscription({ subscriber: address });
-        if (subscribedTx.result === 0n) {
-          skipped += 1;
-          continue;
-        }
+    if (!action) {
+      return {
+        subscribersIndexed: subscribers.length,
+        claimed,
+        refunded,
+        skipped: subscribers.length,
+        errors,
+      };
+    }
 
-        if (offer.finalized) {
-          const tx = await client.claim({ subscriber: address });
-          (await tx.signAndSend()).result.unwrap();
-          claimed.push(address);
-        } else if (graceElapsed) {
-          const tx = await client.refund({ subscriber: address });
-          (await tx.signAndSend()).result.unwrap();
-          refunded.push(address);
-        } else {
-          skipped += 1;
-        }
+    const eligibility = await Promise.all(
+      subscribers.map(async (address) => {
+        const [hasClaimedTx, subscribedTx] = await Promise.all([
+          client.has_claimed({ subscriber: address }),
+          client.get_subscription({ subscriber: address }),
+        ]);
+        const eligible = !hasClaimedTx.result && subscribedTx.result > 0n;
+        return { address, eligible };
+      }),
+    );
+
+    for (const { address, eligible } of eligibility) {
+      if (!eligible) {
+        skipped += 1;
+        continue;
+      }
+      try {
+        const tx = await client[action]({ subscriber: address });
+        (await tx.signAndSend()).result.unwrap();
+        (action === "claim" ? claimed : refunded).push(address);
       } catch (err) {
         errors.push({ address, message: getErrorMessage(err) });
       }
