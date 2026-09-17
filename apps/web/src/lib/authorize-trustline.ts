@@ -1,4 +1,5 @@
 import { Asset, BASE_FEE, Keypair, Operation, TransactionBuilder } from "@stellar/stellar-sdk";
+import { Result } from "better-result";
 import { clientEnv } from "./env.client";
 import { serverEnv } from "./env.server";
 import { horizonServer } from "./stellar";
@@ -8,13 +9,18 @@ export type AuthorizeResult =
   | { status: "ALREADY_AUTHORIZED" }
   | { status: "NEEDS_TRUSTLINE" };
 
+function isNotFound(error: unknown): boolean {
+  return (error as { response?: { status?: number } })?.response?.status === 404;
+}
+
 export async function authorizeDpriTrustline(account: string): Promise<AuthorizeResult> {
   const dpri = new Asset("DPRI", clientEnv.NEXT_PUBLIC_DPRI_ISSUER);
-  const accountRecord = await horizonServer.loadAccount(account).catch((err) => {
-    if (err?.response?.status === 404) return null;
-    throw err;
-  });
-  if (!accountRecord) return { status: "NEEDS_TRUSTLINE" };
+  const accountResult = await Result.tryPromise(() => horizonServer.loadAccount(account));
+  if (accountResult.isErr()) {
+    if (isNotFound(accountResult.error)) return { status: "NEEDS_TRUSTLINE" };
+    throw accountResult.error;
+  }
+  const accountRecord = accountResult.value;
 
   const trustline = accountRecord.balances.find(
     (b): b is Extract<typeof b, { asset_code: string; asset_issuer: string }> =>

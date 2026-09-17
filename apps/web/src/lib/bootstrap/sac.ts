@@ -1,4 +1,5 @@
 import { Asset, BASE_FEE, Keypair, Operation, TransactionBuilder, rpc } from "@stellar/stellar-sdk";
+import { Result } from "better-result";
 import { clientEnv } from "@/lib/env.client";
 import { getErrorMessage } from "@/lib/error-message";
 
@@ -12,10 +13,8 @@ export async function ensureStellarAssetContract(
 ): Promise<string> {
   const expectedId = asset.contractId(clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE);
 
-  try {
-    await rpcServer.getContractInstance(expectedId);
-    return expectedId;
-  } catch {}
+  const existing = await Result.tryPromise(() => rpcServer.getContractInstance(expectedId));
+  if (existing.isOk()) return expectedId;
 
   const account = await rpcServer.getAccount(sourceKeypair.publicKey());
   const tx = new TransactionBuilder(account, {
@@ -26,7 +25,7 @@ export async function ensureStellarAssetContract(
     .setTimeout(60)
     .build();
 
-  try {
+  const deployResult = await Result.tryPromise(async () => {
     const prepared = await rpcServer.prepareTransaction(tx);
     prepared.sign(sourceKeypair);
     const sent = await rpcServer.sendTransaction(prepared);
@@ -36,10 +35,14 @@ export async function ensureStellarAssetContract(
         `SAC deploy for ${asset.code}:${asset.issuer} failed: ${JSON.stringify(final)}`,
       );
     }
-  } catch (err) {
+  });
+
+  if (deployResult.isErr()) {
     // Another actor may have deployed it between our check and this attempt.
-    const message = getErrorMessage(err);
-    if (!message.includes("ExistingValue") && !message.includes("already exists")) throw err;
+    const message = getErrorMessage(deployResult.error);
+    if (!message.includes("ExistingValue") && !message.includes("already exists")) {
+      throw deployResult.error;
+    }
   }
 
   return expectedId;

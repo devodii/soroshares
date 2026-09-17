@@ -1,5 +1,6 @@
 import { Client } from "@soroshares/contract-client";
 import { Keypair } from "@stellar/stellar-sdk";
+import { Result } from "better-result";
 import { apiHandler } from "@/lib/api-handler";
 import { clientEnv } from "@/lib/env.client";
 import { serverEnv } from "@/lib/env.server";
@@ -73,12 +74,14 @@ export const GET = apiHandler({
         skipped += 1;
         continue;
       }
-      try {
+      const sweepResult = await Result.tryPromise(async () => {
         const tx = await client[action]({ subscriber: address });
         (await tx.signAndSend()).result.unwrap();
+      });
+      if (sweepResult.isOk()) {
         (action === "claim" ? claimed : refunded).push(address);
-      } catch (err) {
-        errors.push({ address, message: getErrorMessage(err) });
+      } else {
+        errors.push({ address, message: getErrorMessage(sweepResult.error) });
       }
     }
 

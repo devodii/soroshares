@@ -14,12 +14,15 @@ const challengeQuery = z.object({
 export const GET = apiHandler({
   schema: { query: challengeQuery },
   handler: async ({ query }) => {
-    try {
-      const transaction = buildChallenge(query.account);
-      return { transaction, network_passphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE };
-    } catch (err) {
-      throw new ApiError(400, "CHALLENGE_FAILED", getErrorMessage(err));
-    }
+    return buildChallenge(query.account).match({
+      ok: (transaction) => ({
+        transaction,
+        network_passphrase: clientEnv.NEXT_PUBLIC_NETWORK_PASSPHRASE,
+      }),
+      err: (err) => {
+        throw new ApiError(400, "CHALLENGE_FAILED", getErrorMessage(err));
+      },
+    });
   },
 });
 
@@ -28,12 +31,13 @@ const verifyBody = z.object({ transaction: z.string().min(1) });
 export const POST = apiHandler({
   schema: { body: verifyBody },
   handler: async ({ body }) => {
-    try {
-      const account = verifyChallenge(body.transaction);
-      const token = await issueToken(account);
-      return { token };
-    } catch (err) {
-      throw new ApiError(400, "VERIFICATION_FAILED", getErrorMessage(err));
-    }
+    const account = verifyChallenge(body.transaction).match({
+      ok: (account) => account,
+      err: (err) => {
+        throw new ApiError(400, "VERIFICATION_FAILED", getErrorMessage(err));
+      },
+    });
+    const token = await issueToken(account);
+    return { token };
   },
 });
