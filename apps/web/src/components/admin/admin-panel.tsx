@@ -1,7 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import * as React from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,13 +19,22 @@ import { clientEnv } from "@/lib/env.client";
 import { getErrorMessage } from "@/lib/error-message";
 import { formatLedgerCountdown } from "@/lib/format-duration";
 
+const finalizeSchema = z.object({
+  allotmentPct: z.number().min(0, "Must be at least 0").max(100, "Must be at most 100"),
+});
+
+type FinalizeFormValues = z.infer<typeof finalizeSchema>;
+
 export function AdminPanel() {
   const { address, connecting, connect, signTransaction, signAuthEntry } = useWallet();
   const { data: offer, refetch } = useOffer();
   const { data: latestLedger } = useLatestLedger();
   const { data: bootstrapStatus } = useBootstrapStatus();
   const runBootstrap = useRunBootstrap();
-  const [allotmentPct, setAllotmentPct] = React.useState(60);
+  const finalizeForm = useForm<FinalizeFormValues>({
+    resolver: zodResolver(finalizeSchema),
+    defaultValues: { allotmentPct: 60 },
+  });
   const [submitting, setSubmitting] = React.useState(false);
   const [confirmRedeploy, setConfirmRedeploy] = React.useState(false);
 
@@ -42,22 +54,20 @@ export function AdminPanel() {
     }
   }
 
-  async function handleFinalize() {
+  async function onFinalize(values: FinalizeFormValues) {
     if (!address) return;
-    setSubmitting(true);
     try {
       const client = getOfferClient(address, signTransaction, signAuthEntry);
-      const tx = await client.finalize({ admin: address, allotment_bps: allotmentPct * 100 });
+      const tx = await client.finalize({
+        admin: address,
+        allotment_bps: values.allotmentPct * 100,
+      });
       const sent = await tx.signAndSend();
       sent.result.unwrap();
       toast.success("Offer finalized");
       refetch();
     } catch (err) {
-      toast.error("Finalize failed", {
-        description: getErrorMessage(err),
-      });
-    } finally {
-      setSubmitting(false);
+      finalizeForm.setError("allotmentPct", { message: getErrorMessage(err) });
     }
   }
 
@@ -126,21 +136,30 @@ export function AdminPanel() {
               Sets the allotment % for every subscriber at once. Nothing moves automatically —
               each subscriber then calls claim themselves to receive their shares and refund.
             </p>
-            <div className="space-y-1">
-              <Label htmlFor="allotment">Allotment %</Label>
-              <Input
-                id="allotment"
-                type="number"
-                min={0}
-                max={100}
-                value={allotmentPct}
-                onChange={(e) => setAllotmentPct(Number(e.target.value))}
-                disabled={offer?.finalized}
-              />
-            </div>
-            <Button onClick={handleFinalize} disabled={submitting || offer?.finalized}>
-              {submitting ? "Submitting…" : "Finalize"}
-            </Button>
+            <form onSubmit={finalizeForm.handleSubmit(onFinalize)} className="space-y-3">
+              <div className="space-y-1">
+                <Label htmlFor="allotment">Allotment %</Label>
+                <Input
+                  id="allotment"
+                  type="number"
+                  min={0}
+                  max={100}
+                  disabled={offer?.finalized}
+                  {...finalizeForm.register("allotmentPct", { valueAsNumber: true })}
+                />
+                {finalizeForm.formState.errors.allotmentPct && (
+                  <p className="text-xs text-destructive">
+                    {finalizeForm.formState.errors.allotmentPct.message}
+                  </p>
+                )}
+              </div>
+              <Button
+                type="submit"
+                disabled={finalizeForm.formState.isSubmitting || offer?.finalized}
+              >
+                {finalizeForm.formState.isSubmitting ? "Submitting…" : "Finalize"}
+              </Button>
+            </form>
             <Button
               onClick={handleWithdraw}
               disabled={submitting || !offer?.finalized}
