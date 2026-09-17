@@ -13,7 +13,7 @@ export function BuiltBy() {
         className="size-16 shrink-0 rounded-full object-cover"
       />
       <p className="text-sm text-muted-foreground">
-        Hey curious, I&apos;m Emmanuel Odii — I&apos;ve also built{" "}
+        Hey curious, I&apos;m Odii, I&apos;ve also built{" "}
         <a href="https://stellartools.dev" target="_blank" rel="noreferrer" className={linkClass}>
           StellarTools
         </a>{" "}
