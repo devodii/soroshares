@@ -120,7 +120,6 @@ export function SubscribeStep() {
             <Input
               id="shares"
               type="number"
-              min={clientEnv.NEXT_PUBLIC_MIN_SHARES}
               step={10}
               {...form.register("shares", { valueAsNumber: true })}
             />

@@ -150,8 +150,6 @@ export function AdminPanel() {
                 <Input
                   id="allotment"
                   type="number"
-                  min={0}
-                  max={100}
                   disabled={offer?.finalized}
                   {...finalizeForm.register("allotmentPct", { valueAsNumber: true })}
                 />
