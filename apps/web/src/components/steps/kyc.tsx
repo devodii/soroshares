@@ -23,9 +23,10 @@ import { useKycStatus, useSubmitKyc } from "@/hooks/use-kyc";
 import { useWallet } from "@/hooks/use-wallet";
 import { AFRICAN_COUNTRIES } from "@/lib/african-countries";
 import { apiFetch } from "@/lib/api-client";
-import { buildSignSubmit } from "@/lib/classic-tx";
+import { buildAndSign } from "@/lib/classic-tx";
 import { USDC_ISSUER } from "@/lib/env";
 import { getErrorMessage } from "@/lib/error-message";
+import { FAUCET_AMOUNT } from "@/lib/faucet";
 
 const USDC_TOPUP_FLOOR = 100;
 
@@ -54,7 +55,7 @@ export function KycStep() {
   const { data: account, refetch: refetchAccount } = useAccount(address);
   const { data: kyc } = useKycStatus(token);
   const submitKyc = useSubmitKyc(token);
-  const [preparing, setPreparing] = React.useState(false);
+  const [stage, setStage] = React.useState<string | null>(null);
 
   const form = useForm<KycFormValues>({
     resolver: zodResolver(kycSchema),
@@ -75,22 +76,40 @@ export function KycStep() {
 
   async function handleSignIn() {
     if (!address) return;
-    setPreparing(true);
     try {
-      if (!account?.usdcTrustline) {
-        await buildSignSubmit(
+      const needsTrustline = !account?.usdcTrustline;
+      const needsTopUp = needsTrustline || Number(account?.usdc ?? "0") < USDC_TOPUP_FLOOR;
+
+      if (needsTrustline) {
+        setStage("Setting up USDC…");
+        const signedXdr = await buildAndSign(
           address,
-          [Operation.changeTrust({ asset: new Asset("USDC", USDC_ISSUER) })],
+          [
+            Operation.changeTrust({ asset: new Asset("USDC", USDC_ISSUER) }),
+            Operation.payment({
+              destination: address,
+              asset: new Asset("USDC", USDC_ISSUER),
+              amount: FAUCET_AMOUNT,
+              source: USDC_ISSUER,
+            }),
+          ],
           signTransaction,
         );
-      }
-      if (!account?.usdcTrustline || Number(account.usdc) < USDC_TOPUP_FLOOR) {
+        await apiFetch("/api/faucet/usdc", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ signedXdr }),
+        });
+      } else if (needsTopUp) {
+        setStage("Funding test USDC…");
         await apiFetch("/api/faucet/usdc", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ address }),
         });
       }
+
+      setStage("Signing in…");
       refetchAccount();
       await signIn();
     } catch (err) {
@@ -98,7 +117,7 @@ export function KycStep() {
         description: getErrorMessage(err),
       });
     } finally {
-      setPreparing(false);
+      setStage(null);
     }
   }
 
@@ -120,8 +139,8 @@ export function KycStep() {
   return (
     <StepCard step={3} title="Verify identity" status={status}>
       {!token && (
-        <Button onClick={handleSignIn} disabled={!address || !trustlineOpen || preparing}>
-          {preparing ? "Preparing…" : "Sign in"}
+        <Button onClick={handleSignIn} disabled={!address || !trustlineOpen || Boolean(stage)}>
+          {stage ?? "Sign in"}
         </Button>
       )}
       {token && kyc?.status !== "ACCEPTED" && (

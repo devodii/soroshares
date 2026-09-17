@@ -8,9 +8,10 @@ import { StepCard, StepStatus } from "@/components/step-card";
 import { useAccount } from "@/hooks/use-account";
 import { useWallet } from "@/hooks/use-wallet";
 import { apiFetch } from "@/lib/api-client";
-import { buildSignSubmit } from "@/lib/classic-tx";
+import { buildAndSign } from "@/lib/classic-tx";
 import { USDC_ISSUER } from "@/lib/env";
 import { getErrorMessage } from "@/lib/error-message";
+import { FAUCET_AMOUNT } from "@/lib/faucet";
 
 function truncate(address: string): string {
   return `${address.slice(0, 4)}…${address.slice(-4)}`;
@@ -42,15 +43,23 @@ export function ConnectWalletStep() {
       toast.success("Funded with Friendbot");
 
       try {
-        await buildSignSubmit(
+        const signedXdr = await buildAndSign(
           address,
-          [Operation.changeTrust({ asset: new Asset("USDC", USDC_ISSUER) })],
+          [
+            Operation.changeTrust({ asset: new Asset("USDC", USDC_ISSUER) }),
+            Operation.payment({
+              destination: address,
+              asset: new Asset("USDC", USDC_ISSUER),
+              amount: FAUCET_AMOUNT,
+              source: USDC_ISSUER,
+            }),
+          ],
           signTransaction,
         );
         await apiFetch("/api/faucet/usdc", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ address }),
+          body: JSON.stringify({ signedXdr }),
         });
         toast.success("Funded with test USDC");
       } catch (err) {
