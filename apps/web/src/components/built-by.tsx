@@ -32,7 +32,7 @@ export function BuiltBy() {
         </a>{" "}
         and{" "}
         <a href="https://x.com/devodii_" target="_blank" rel="noreferrer" className={linkClass}>
-          Twitter
+          Twitter/𝕏
         </a>
         .
       </p>
