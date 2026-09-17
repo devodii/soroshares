@@ -1,7 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import * as React from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +21,15 @@ import { formatLedgerCountdown } from "@/lib/format-duration";
 
 const STROOP = 10_000_000n;
 
+const subscribeSchema = z.object({
+  shares: z
+    .number()
+    .int()
+    .min(clientEnv.NEXT_PUBLIC_MIN_SHARES, `Minimum ${clientEnv.NEXT_PUBLIC_MIN_SHARES} shares`),
+});
+
+type SubscribeFormValues = z.infer<typeof subscribeSchema>;
+
 export function SubscribeStep() {
   const { address, token, signTransaction, signAuthEntry } = useWallet();
   const { data: account, refetch: refetchAccount } = useAccount(address);
@@ -25,8 +37,12 @@ export function SubscribeStep() {
   const { data: offer, refetch: refetchOffer } = useOffer();
   const { data: latestLedger } = useLatestLedger();
 
-  const [shares, setShares] = React.useState(10);
-  const [submitting, setSubmitting] = React.useState(false);
+  const form = useForm<SubscribeFormValues>({
+    resolver: zodResolver(subscribeSchema),
+    defaultValues: { shares: clientEnv.NEXT_PUBLIC_MIN_SHARES },
+  });
+  const shares = useWatch({ control: form.control, name: "shares" }) || 0;
+
   const [result, setResult] = React.useState<{
     txHash: string;
     shares: number;
@@ -46,8 +62,7 @@ export function SubscribeStep() {
     trustlineAuthorized &&
     !offerClosed &&
     hasUsdcTrustline &&
-    !insufficientUsdc &&
-    shares >= 10;
+    !insufficientUsdc;
 
   const status: StepStatus = !canSubscribe && !result ? "pending" : result ? "done" : "active";
 
@@ -56,37 +71,33 @@ export function SubscribeStep() {
     if (!kycAccepted) return "KYC not accepted";
     if (!trustlineAuthorized) return "Trustline not authorized";
     if (offerClosed) return "Offer closed";
-    if (shares < 10) return "Minimum 10 shares";
     if (!hasUsdcTrustline) return "No USDC trustline";
     if (insufficientUsdc) return "Insufficient USDC";
     return null;
   }
 
-  async function handleSubscribe() {
+  async function onSubmit(values: SubscribeFormValues) {
     if (!address) return;
-    setSubmitting(true);
     try {
       const client = getOfferClient(address, signTransaction, signAuthEntry);
       const tx = await client.subscribe({
         subscriber: address,
-        shares: BigInt(shares) * STROOP,
+        shares: BigInt(values.shares) * STROOP,
       });
       const sent = await tx.signAndSend();
       sent.result.unwrap();
       setResult({
         txHash: sent.sendTransactionResponse?.hash ?? "",
-        shares,
+        shares: values.shares,
         usdc: cost.toFixed(2),
       });
-      toast.success(`Subscribed to ${shares} DPRI`);
+      toast.success(`Subscribed to ${values.shares} DPRI`);
       refetchAccount();
       refetchOffer();
     } catch (err) {
       toast.error("Subscribe failed", {
         description: getErrorMessage(err),
       });
-    } finally {
-      setSubmitting(false);
     }
   }
 
@@ -95,7 +106,7 @@ export function SubscribeStep() {
   return (
     <StepCard step={4} title="Subscribe" status={status}>
       {!result && (
-        <div className="space-y-3">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
           {latestLedger && offer && !offerClosed && (
             <p className="text-sm text-muted-foreground">
               Offer closes in ~{formatLedgerCountdown(offer.close_ledger - latestLedger)}
@@ -108,9 +119,11 @@ export function SubscribeStep() {
               type="number"
               min={clientEnv.NEXT_PUBLIC_MIN_SHARES}
               step={10}
-              value={shares}
-              onChange={(e) => setShares(Number(e.target.value))}
+              {...form.register("shares", { valueAsNumber: true })}
             />
+            {form.formState.errors.shares && (
+              <p className="text-xs text-destructive">{form.formState.errors.shares.message}</p>
+            )}
           </div>
           <div className="text-sm text-muted-foreground">
             ₦{(shares * clientEnv.NEXT_PUBLIC_PRICE_NGN).toLocaleString()} / {cost.toFixed(2)} USDC
@@ -119,15 +132,14 @@ export function SubscribeStep() {
           <div className="text-sm font-medium">Total: {cost.toFixed(2)} USDC</div>
 
           <Button
-            type="button"
+            type="submit"
             className="w-full"
-            onClick={handleSubscribe}
-            disabled={!canSubscribe || submitting}
+            disabled={!canSubscribe || form.formState.isSubmitting}
           >
-            {submitting ? "Submitting…" : "Subscribe"}
+            {form.formState.isSubmitting ? "Submitting…" : "Subscribe"}
           </Button>
           {reason && <p className="text-xs text-muted-foreground">{reason}</p>}
-        </div>
+        </form>
       )}
       {result && (
         <div className="space-y-1 text-sm">
