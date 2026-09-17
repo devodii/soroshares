@@ -6,7 +6,12 @@ import { clientEnv } from "./env.client";
 
 let initialized = false;
 
-function ensureInitialized(selectedWalletId?: string): void {
+// WalletConnectModule kicks off an async SignClient.init() network call in
+// its constructor, and its isAvailable() check (which the connect modal uses
+// to decide "Install" vs connectable) depends on that having resolved. Call
+// this as early as possible — on app mount, not on first click — so it has
+// time to finish before anyone opens the modal.
+export function ensureInitialized(selectedWalletId?: string): void {
   if (initialized) return;
   const modules = defaultModules();
   if (clientEnv.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID) {

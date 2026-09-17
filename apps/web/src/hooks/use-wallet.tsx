@@ -31,9 +31,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const restoreAttempted = React.useRef(false);
 
   React.useEffect(() => {
-    if (restoreAttempted.current || !walletId) return;
+    if (restoreAttempted.current) return;
     restoreAttempted.current = true;
-    wallet.selectWallet(walletId);
+    if (walletId) {
+      wallet.selectWallet(walletId);
+    } else {
+      wallet.ensureInitialized();
+    }
   }, [walletId]);
 
   const connect = React.useCallback(async () => {
