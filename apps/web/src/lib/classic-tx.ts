@@ -14,7 +14,7 @@ export async function buildAndSign(
   }).setTimeout(60);
   for (const op of operations) builder.addOperation(op);
   const tx = builder.build();
-  return signTransaction(tx.toXDR());
+  return signTransaction(tx.toXdr());
 }
 
 export async function buildSignSubmit(

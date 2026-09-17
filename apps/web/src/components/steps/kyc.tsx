@@ -145,13 +145,20 @@ export function KycStep() {
       )}
       {token && kyc?.status !== "ACCEPTED" && (
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-          <button
+          <Alert>
+            <AlertDescription>
+              Testnet demo, not a real BVN check. Any 11 digits work, or use the button below to
+              fill fake data.
+            </AlertDescription>
+          </Alert>
+          <Button
             type="button"
-            className="cursor-pointer text-xs text-muted-foreground underline underline-offset-2"
+            variant="outline"
+            size="sm"
             onClick={() => form.reset(DEMO_DATA)}
           >
             Use demo data
-          </button>
+          </Button>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
