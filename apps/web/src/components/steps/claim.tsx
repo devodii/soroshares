@@ -1,5 +1,6 @@
 "use client";
 
+import { Result } from "better-result";
 import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -43,43 +44,49 @@ export function ClaimStep() {
   async function handleClaim() {
     if (!address) return;
     setSubmitting(true);
-    try {
+    const result = await Result.tryPromise(async () => {
       const client = getOfferClient(address, signTransaction, signAuthEntry);
       const tx = await client.claim({ subscriber: address });
       const sent = await tx.signAndSend();
       sent.result.unwrap();
-      setResult({ kind: "claim", txHash: sent.sendTransactionResponse?.hash ?? "" });
-      toast.success("Claimed");
-      refetchOffer();
-      refetchSubscription();
-    } catch (err) {
-      toast.error("Claim failed", {
-        description: getErrorMessage(err),
-      });
-    } finally {
-      setSubmitting(false);
-    }
+      return sent.sendTransactionResponse?.hash ?? "";
+    });
+    result.match({
+      ok: (txHash) => {
+        setResult({ kind: "claim", txHash });
+        toast.success("Claimed");
+        refetchOffer();
+        refetchSubscription();
+      },
+      err: (err) => {
+        toast.error("Claim failed", { description: getErrorMessage(err) });
+      },
+    });
+    setSubmitting(false);
   }
 
   async function handleRefund() {
     if (!address) return;
     setSubmitting(true);
-    try {
+    const result = await Result.tryPromise(async () => {
       const client = getOfferClient(address, signTransaction, signAuthEntry);
       const tx = await client.refund({ subscriber: address });
       const sent = await tx.signAndSend();
       sent.result.unwrap();
-      setResult({ kind: "refund", txHash: sent.sendTransactionResponse?.hash ?? "" });
-      toast.success("Refunded");
-      refetchOffer();
-      refetchSubscription();
-    } catch (err) {
-      toast.error("Refund failed", {
-        description: getErrorMessage(err),
-      });
-    } finally {
-      setSubmitting(false);
-    }
+      return sent.sendTransactionResponse?.hash ?? "";
+    });
+    result.match({
+      ok: (txHash) => {
+        setResult({ kind: "refund", txHash });
+        toast.success("Refunded");
+        refetchOffer();
+        refetchSubscription();
+      },
+      err: (err) => {
+        toast.error("Refund failed", { description: getErrorMessage(err) });
+      },
+    });
+    setSubmitting(false);
   }
 
   const allotted =

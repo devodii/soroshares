@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Result } from "better-result";
 import * as React from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
@@ -78,7 +79,7 @@ export function SubscribeStep() {
 
   async function onSubmit(values: SubscribeFormValues) {
     if (!address) return;
-    try {
+    const result = await Result.tryPromise(async () => {
       const client = getOfferClient(address, signTransaction, signAuthEntry);
       const tx = await client.subscribe({
         subscriber: address,
@@ -86,19 +87,19 @@ export function SubscribeStep() {
       });
       const sent = await tx.signAndSend();
       sent.result.unwrap();
-      setResult({
-        txHash: sent.sendTransactionResponse?.hash ?? "",
-        shares: values.shares,
-        usdc: cost.toFixed(2),
-      });
-      toast.success(`Subscribed to ${values.shares} DPRI`);
-      refetchAccount();
-      refetchOffer();
-    } catch (err) {
-      toast.error("Subscribe failed", {
-        description: getErrorMessage(err),
-      });
-    }
+      return sent.sendTransactionResponse?.hash ?? "";
+    });
+    result.match({
+      ok: (txHash) => {
+        setResult({ txHash, shares: values.shares, usdc: cost.toFixed(2) });
+        toast.success(`Subscribed to ${values.shares} DPRI`);
+        refetchAccount();
+        refetchOffer();
+      },
+      err: (err) => {
+        toast.error("Subscribe failed", { description: getErrorMessage(err) });
+      },
+    });
   }
 
   const reason = disabledReason();

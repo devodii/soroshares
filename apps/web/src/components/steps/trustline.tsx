@@ -1,6 +1,7 @@
 "use client";
 
 import { Asset, Operation } from "@stellar/stellar-sdk";
+import { Result } from "better-result";
 import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -23,22 +24,24 @@ export function TrustlineStep() {
   async function handleAddTrustline() {
     if (!address) return;
     setSubmitting(true);
-    try {
-      const hash = await buildSignSubmit(
+    const result = await Result.tryPromise(() =>
+      buildSignSubmit(
         address,
         [Operation.changeTrust({ asset: new Asset("DPRI", clientEnv.NEXT_PUBLIC_DPRI_ISSUER) })],
         signTransaction,
-      );
-      setTxHash(hash);
-      toast.success("Trustline added");
-      refetch();
-    } catch (err) {
-      toast.error("Add trustline failed", {
-        description: getErrorMessage(err),
-      });
-    } finally {
-      setSubmitting(false);
-    }
+      ),
+    );
+    result.match({
+      ok: (hash) => {
+        setTxHash(hash);
+        toast.success("Trustline added");
+        refetch();
+      },
+      err: (err) => {
+        toast.error("Add trustline failed", { description: getErrorMessage(err) });
+      },
+    });
+    setSubmitting(false);
   }
 
   return (
