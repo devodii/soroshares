@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { ApiError, apiHandler, requireBearerAccount } from "@/lib/api-handler";
+import { ApiError, apiHandler } from "@/lib/api-handler";
 import { authorizeDpriTrustline } from "@/lib/authorize-trustline";
 import { decide } from "@/lib/kyc-approval";
 import { getKyc, KycStatus, putKyc } from "@/lib/kyc-store";
@@ -15,9 +15,9 @@ const kycSubmission = z.object({
 });
 
 export const PUT = apiHandler({
+  auth: "bearer",
   schema: { body: kycSubmission },
-  handler: async ({ body, req }) => {
-    const account = await requireBearerAccount(req);
+  handler: async ({ body, account }) => {
     const decision = decide(body);
     let status: KycStatus = decision.status;
     let message = decision.message;
@@ -38,8 +38,8 @@ export const PUT = apiHandler({
 });
 
 export const GET = apiHandler({
-  handler: async ({ req }) => {
-    const account = await requireBearerAccount(req);
+  auth: "bearer",
+  handler: async ({ account }) => {
     const record = await getKyc(account);
     if (!record) throw new ApiError(404, "NOT_FOUND", "no KYC record for this account");
     return record;

@@ -1,4 +1,5 @@
 import "server-only";
+import { Result } from "better-result";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { serverEnv } from "./env.server";
@@ -12,14 +13,6 @@ export class ApiError extends Error {
     message: string,
   ) {
     super(message);
-  }
-}
-
-export async function requireBearerAccount(req: NextRequest): Promise<string> {
-  try {
-    return await verifyToken(bearerToken(req.headers.get("authorization")));
-  } catch {
-    throw new ApiError(401, "UNAUTHORIZED", "missing or invalid bearer token");
   }
 }
 
@@ -69,6 +62,8 @@ export interface HandlerArgs<TBody, TQuery> {
   body: TBody;
   query: TQuery;
   req: NextRequest;
+  /** The SEP-10-authenticated account, present when auth is "bearer". */
+  account: string;
 }
 
 export interface HandlerConfig<TBody, TQuery> {
@@ -76,7 +71,7 @@ export interface HandlerConfig<TBody, TQuery> {
     body?: z.ZodType<TBody>;
     query?: z.ZodType<TQuery>;
   };
-  auth?: "admin" | "cron";
+  auth?: "admin" | "cron" | "bearer";
   /** Requests per minute per client IP + route. */
   rateLimit?: number;
   handler: (args: HandlerArgs<TBody, TQuery>) => Promise<unknown>;
@@ -95,21 +90,29 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
     const idempotencyKey = req.headers.get("Idempotency-Key");
     const isIdempotent = Boolean(idempotencyKey) && req.method === "POST";
 
+    let account = undefined as unknown as string;
+
     try {
       if (config.auth === "admin") {
         const authorized = await verifyAdminSession(req.cookies.get("admin_session")?.value);
         if (!authorized) throw new ApiError(401, "UNAUTHORIZED", "admin session required");
       }
       if (config.auth === "cron") {
-        let token: string;
-        try {
-          token = bearerToken(req.headers.get("authorization"));
-        } catch {
+        const tokenResult = Result.try(() => bearerToken(req.headers.get("authorization")));
+        if (Result.isError(tokenResult) || tokenResult.value !== serverEnv.ADMIN_UI_PASSWORD) {
           throw new ApiError(401, "UNAUTHORIZED", "cron secret required");
         }
-        if (token !== serverEnv.ADMIN_UI_PASSWORD) {
-          throw new ApiError(401, "UNAUTHORIZED", "cron secret required");
+      }
+      if (config.auth === "bearer") {
+        const tokenResult = Result.try(() => bearerToken(req.headers.get("authorization")));
+        if (Result.isError(tokenResult)) {
+          throw new ApiError(401, "UNAUTHORIZED", "missing or invalid bearer token");
         }
+        const verifyResult = await verifyToken(tokenResult.value);
+        if (Result.isError(verifyResult)) {
+          throw new ApiError(401, "UNAUTHORIZED", "missing or invalid bearer token");
+        }
+        account = verifyResult.value;
       }
 
       const limit = config.rateLimit ?? DEFAULT_RATE_LIMIT;
@@ -155,7 +158,7 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
         query = parsed.data;
       }
 
-      const result = await config.handler({ body, query, req });
+      const result = await config.handler({ body, query, req, account });
 
       // A Response means the handler wants a non-JSON reply (e.g. stellar.toml); skip caching it.
       if (result instanceof Response) return result;

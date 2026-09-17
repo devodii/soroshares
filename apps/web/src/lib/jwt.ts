@@ -1,3 +1,4 @@
+import { Result } from "better-result";
 import { jwtVerify, SignJWT } from "jose";
 import { serverEnv } from "./env.server";
 
@@ -13,10 +14,15 @@ export async function issueToken(account: string): Promise<string> {
     .sign(secretKey());
 }
 
-export async function verifyToken(token: string): Promise<string> {
-  const { payload } = await jwtVerify(token, secretKey());
-  if (typeof payload.sub !== "string") throw new Error("token missing sub claim");
-  return payload.sub;
+export async function verifyToken(token: string): Promise<Result<string, Error>> {
+  return Result.tryPromise({
+    try: async () => {
+      const { payload } = await jwtVerify(token, secretKey());
+      if (typeof payload.sub !== "string") throw new Error("token missing sub claim");
+      return payload.sub;
+    },
+    catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+  });
 }
 
 export async function issueAdminSession(): Promise<string> {

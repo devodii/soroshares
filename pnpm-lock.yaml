@@ -47,6 +47,9 @@ importers:
       '@upstash/redis':
         specifier: ^1.38.4
         version: 1.38.4
+      better-result:
+        specifier: ^3.0.1
+        version: 3.0.1
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -2100,6 +2103,9 @@ packages:
     resolution: {integrity: sha512-le521dGVfxM7yRX0EikCoSz+rOK+hHzdDt/E7mG1jOJB/6WAAUuwVroLwaB7ApaUsz5Q0kFlDXLSA9MheUIfRQ==}
     engines: {node: '>=6.0.0'}
     hasBin: true
+
+  better-result@3.0.1:
+    resolution: {integrity: sha512-rnCeqEXkKPHmz5MO5ZroPRDyHe4YvlNPyy7qj8cVcWs/GnvSvC3086G74/220W+wWcIWlXgzvcjskFV0A4blUQ==}
 
   big.js@6.2.2:
     resolution: {integrity: sha512-y/ie+Faknx7sZA5MfGA2xKlu0GDv8RWrXGsmlteyJQ2lvoKv9GBK/fpRMc2qlSoBAgNxrixICFCBefIq8WCQpQ==}
@@ -7764,6 +7770,8 @@ snapshots:
   base64-js@1.5.1: {}
 
   baseline-browser-mapping@2.11.23: {}
+
+  better-result@3.0.1: {}
 
   big.js@6.2.2: {}
 
