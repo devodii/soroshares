@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { StepCard, StepStatus } from "@/components/step-card";
 import { useAccount } from "@/hooks/use-account";
 import { useKycStatus, useSubmitKyc } from "@/hooks/use-kyc";
@@ -53,7 +54,7 @@ const DEMO_DATA: KycFormValues = {
 export function KycStep() {
   const { address, token, signIn, signTransaction } = useWallet();
   const { data: account, refetch: refetchAccount } = useAccount(address);
-  const { data: kyc } = useKycStatus(token);
+  const { data: kyc, isLoading: kycLoading } = useKycStatus(token);
   const submitKyc = useSubmitKyc(token);
   const [stage, setStage] = React.useState<string | null>(null);
 
@@ -143,7 +144,22 @@ export function KycStep() {
           {stage ?? "Sign in"}
         </Button>
       )}
-      {token && kyc?.status !== "ACCEPTED" && (
+      {token && kycLoading && (
+        <div className="space-y-3">
+          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-7 w-28" />
+          <div className="grid grid-cols-2 gap-3">
+            <Skeleton className="h-14 w-full" />
+            <Skeleton className="h-14 w-full" />
+          </div>
+          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-8 w-20" />
+        </div>
+      )}
+      {token && !kycLoading && kyc?.status !== "ACCEPTED" && (
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
           <Alert>
             <AlertDescription>
@@ -220,12 +236,12 @@ export function KycStep() {
           </Button>
         </form>
       )}
-      {kyc?.status === "NEEDS_INFO" && (
+      {!kycLoading && kyc?.status === "NEEDS_INFO" && (
         <Alert>
           <AlertDescription>{kyc.message ?? "add DPRI trustline first"}</AlertDescription>
         </Alert>
       )}
-      {kyc?.status === "ACCEPTED" && (
+      {!kycLoading && kyc?.status === "ACCEPTED" && (
         <p className="text-sm text-muted-foreground">
           KYC accepted.{" "}
           {account?.dpriAuthorized ? "Trustline authorized." : "Waiting for issuer authorization…"}
