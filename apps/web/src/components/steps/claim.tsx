@@ -10,6 +10,7 @@ import { useSubscription } from "@/hooks/use-subscription";
 import { useWallet } from "@/hooks/use-wallet";
 import { getOfferClient } from "@/lib/contract";
 import { getErrorMessage } from "@/lib/error-message";
+import { formatLedgerCountdown } from "@/lib/format-duration";
 
 const STROOP = 10_000_000n;
 
@@ -91,8 +92,10 @@ export function ClaimStep() {
         <div className="space-y-2">
           {!closed && (
             <p className="text-sm text-muted-foreground">
-              Waiting for close (ledger {offer?.close_ledger}
-              {latestLedger && offer ? `, ~${(offer.close_ledger - latestLedger) * 5}s` : ""})
+              Waiting for close
+              {latestLedger && offer
+                ? ` — ~${formatLedgerCountdown(offer.close_ledger - latestLedger)} left`
+                : ""}
             </p>
           )}
           {closed && !offer?.finalized && !canRefund && (

@@ -14,6 +14,7 @@ import { useWallet } from "@/hooks/use-wallet";
 import { getOfferClient } from "@/lib/contract";
 import { MIN_SHARES, PRICE_NGN, PRICE_USDC } from "@/lib/env";
 import { getErrorMessage } from "@/lib/error-message";
+import { formatLedgerCountdown } from "@/lib/format-duration";
 
 const STROOP = 10_000_000n;
 
@@ -95,6 +96,11 @@ export function SubscribeStep() {
     <StepCard step={4} title="Subscribe" status={status}>
       {!result && (
         <div className="space-y-3">
+          {latestLedger && offer && !offerClosed && (
+            <p className="text-sm text-muted-foreground">
+              Offer closes in ~{formatLedgerCountdown(offer.close_ledger - latestLedger)}
+            </p>
+          )}
           <div className="space-y-1">
             <Label htmlFor="shares">Shares</Label>
             <Input
@@ -139,8 +145,8 @@ export function SubscribeStep() {
             </a>
           )}
           <p className="text-xs text-muted-foreground">
-            Refund if not finalized by ledger{" "}
-            {offer ? offer.close_ledger + offer.grace_ledgers : "?"} is enforced by the contract.
+            If the offer closes without being finalized, you can refund in full after a grace
+            period the contract enforces.
           </p>
         </div>
       )}
