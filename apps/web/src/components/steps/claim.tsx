@@ -92,7 +92,7 @@ export function ClaimStep() {
           {!closed && (
             <p className="text-sm text-muted-foreground">
               Waiting for close (ledger {offer?.close_ledger}
-              {latestLedger ? `, ~${(offer!.close_ledger - latestLedger) * 5}s` : ""})
+              {latestLedger && offer ? `, ~${(offer.close_ledger - latestLedger) * 5}s` : ""})
             </p>
           )}
           {closed && !offer?.finalized && !canRefund && (
