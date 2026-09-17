@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist_Mono, Space_Grotesk } from "next/font/google";
 import { Badge } from "@/components/ui/badge";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -22,13 +23,20 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${spaceGrotesk.variable} ${geistMono.variable} h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col">
         <Providers>
           <header className="border-b">
             <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
               <span className="font-semibold">soroshares</span>
-              <Badge variant="outline">Testnet</Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">Testnet</Badge>
+                <ThemeToggle />
+              </div>
             </div>
           </header>
           {children}
