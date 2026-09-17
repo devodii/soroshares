@@ -1,4 +1,5 @@
 import { ActivityFeed } from "@/components/activity-feed";
+import { BuiltBy } from "@/components/built-by";
 import { OfferPanel } from "@/components/offer-panel";
 import { ClaimStep } from "@/components/steps/claim";
 import { ConnectWalletStep } from "@/components/steps/connect-wallet";
@@ -28,6 +29,8 @@ export default function Home() {
       </div>
 
       <ActivityFeed />
+
+      <BuiltBy />
 
       <footer className="flex flex-wrap gap-x-4 gap-y-1 border-t pt-4 text-xs text-muted-foreground">
         <a
