@@ -2,7 +2,9 @@
 
 Compliant IPO subscription on Stellar. KYC gate on the base layer, escrow, allotment and refund in one Soroban contract, subscribe from any Stellar wallet.
 
-Reference implementation modeled on the Dangote Petroleum Refinery IPO terms (₦525/share, min 10 shares, offer window 14 Sep to 13 Oct 2026). **Testnet only. Not affiliated with Dangote, NGX, SEC Nigeria, GetEquity or NectarFi. No real money, ever.**
+Reference implementation modeled on the Dangote Petroleum Refinery IPO terms (₦525/share, min 10 shares). The offer window is a ~30-day Stellar ledger countdown from when it was last deployed, shown live in the app. **Testnet only. Not affiliated with Dangote, NGX, SEC Nigeria, GetEquity or NectarFi. No real money, ever.**
+
+Read [HOW_IT_WORKS.md](./HOW_IT_WORKS.md) for the full mechanics, in plain language, with the concrete math.
 
 ## What it enforces, and where
 
