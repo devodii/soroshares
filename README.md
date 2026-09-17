@@ -23,7 +23,6 @@ Reference implementation modeled on the Dangote Petroleum Refinery IPO terms (â‚
 
 ```
 contracts/public_offer/   Soroban contract (Rust): subscribe, finalize, claim, refund
-scripts/                  legacy CLI setup (accounts, asset issuance, deploy, bindings)
 apps/contract-client/     generated TypeScript bindings for the contract
 apps/web/                 Next.js demo: the subscription flow, /admin
 ```

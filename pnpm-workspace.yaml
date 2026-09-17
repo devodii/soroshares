@@ -1,6 +1,5 @@
 packages:
   - apps/*
-  - scripts
 allowBuilds:
   "@reown/appkit": true
   bufferutil: true
