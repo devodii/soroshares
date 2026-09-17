@@ -1,0 +1,3 @@
+{
+  "crons": [{ "path": "/api/cron/claim-sweep", "schedule": "0 0 * * *" }]
+}
