@@ -8,19 +8,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useBootstrapStatus, useRunBootstrap } from "@/hooks/use-bootstrap";
+import { useLatestLedger } from "@/hooks/use-latest-ledger";
 import { useOffer } from "@/hooks/use-offer";
 import { useWallet } from "@/hooks/use-wallet";
 import { getOfferClient } from "@/lib/contract";
 import { ADMIN_PUBLIC } from "@/lib/env";
 import { getErrorMessage } from "@/lib/error-message";
+import { formatLedgerCountdown } from "@/lib/format-duration";
 
 export function AdminPanel() {
   const { address, connecting, connect, signTransaction, signAuthEntry } = useWallet();
   const { data: offer, refetch } = useOffer();
+  const { data: latestLedger } = useLatestLedger();
   const { data: bootstrapStatus } = useBootstrapStatus();
   const runBootstrap = useRunBootstrap();
   const [allotmentPct, setAllotmentPct] = React.useState(60);
   const [submitting, setSubmitting] = React.useState(false);
+  const [confirmRedeploy, setConfirmRedeploy] = React.useState(false);
 
   const isAdmin = address === ADMIN_PUBLIC;
 
@@ -33,6 +37,8 @@ export function AdminPanel() {
       toast.error("Bootstrap failed", {
         description: getErrorMessage(err),
       });
+    } finally {
+      setConfirmRedeploy(false);
     }
   }
 
@@ -80,34 +86,6 @@ export function AdminPanel() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Bootstrap</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Provisions testnet accounts, issues DPRI, deploys the offer contract, and funds it — no
-            local Rust/Stellar CLI needed. Safe to run repeatedly; already-completed steps are
-            skipped.
-          </p>
-          {bootstrapStatus && "offerContract" in bootstrapStatus && (
-            <p className="font-mono text-xs break-all">contract: {bootstrapStatus.offerContract}</p>
-          )}
-          <div className="flex gap-2">
-            <Button onClick={() => handleBootstrap(false)} disabled={runBootstrap.isPending}>
-              {runBootstrap.isPending ? "Running…" : "Run bootstrap"}
-            </Button>
-            <Button
-              onClick={() => handleBootstrap(true)}
-              disabled={runBootstrap.isPending}
-              variant="secondary"
-            >
-              Redeploy fresh offer
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
           <CardTitle>Offer state</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1 text-sm">
@@ -115,7 +93,12 @@ export function AdminPanel() {
             Total subscribed: {offer ? (BigInt(offer.total_shares) / 10_000_000n).toString() : "…"}
           </div>
           <div>Finalized: {offer?.finalized ? `yes (${offer.allotment_bps / 100}%)` : "no"}</div>
-          <div>Close ledger: {offer?.close_ledger ?? "…"}</div>
+          <div>
+            Close ledger: {offer?.close_ledger ?? "…"}
+            {latestLedger && offer && latestLedger < offer.close_ledger
+              ? ` (~${formatLedgerCountdown(offer.close_ledger - latestLedger)} left)`
+              : ""}
+          </div>
         </CardContent>
       </Card>
 
@@ -139,6 +122,10 @@ export function AdminPanel() {
             <CardTitle>Finalize</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Sets the allotment % for every subscriber at once. Nothing moves automatically —
+              each subscriber then calls claim themselves to receive their shares and refund.
+            </p>
             <div className="space-y-1">
               <Label htmlFor="allotment">Allotment %</Label>
               <Input
@@ -164,6 +151,56 @@ export function AdminPanel() {
           </CardContent>
         </Card>
       )}
+
+      <details className="rounded-lg border px-4 py-3">
+        <summary className="cursor-pointer text-sm font-medium">Setup tools</summary>
+        <div className="mt-3 space-y-3">
+          <p className="text-sm text-muted-foreground">
+            One-time provisioning: funds the issuer/admin, issues DPRI, deploys the offer
+            contract, and funds it. Safe to run repeatedly; already-completed steps are skipped.
+            You should not need this once an offer is already live.
+          </p>
+          {bootstrapStatus && "offerContract" in bootstrapStatus && (
+            <p className="font-mono text-xs break-all">contract: {bootstrapStatus.offerContract}</p>
+          )}
+          <div className="flex gap-2">
+            <Button
+              onClick={() => handleBootstrap(false)}
+              disabled={runBootstrap.isPending}
+              variant="outline"
+            >
+              {runBootstrap.isPending ? "Running…" : "Run bootstrap"}
+            </Button>
+            {!confirmRedeploy && (
+              <Button
+                onClick={() => setConfirmRedeploy(true)}
+                disabled={runBootstrap.isPending}
+                variant="outline"
+              >
+                Redeploy fresh offer
+              </Button>
+            )}
+            {confirmRedeploy && (
+              <>
+                <Button
+                  onClick={() => handleBootstrap(true)}
+                  disabled={runBootstrap.isPending}
+                  variant="destructive"
+                >
+                  {runBootstrap.isPending ? "Redeploying…" : "Confirm: replace the live offer"}
+                </Button>
+                <Button
+                  onClick={() => setConfirmRedeploy(false)}
+                  disabled={runBootstrap.isPending}
+                  variant="ghost"
+                >
+                  Cancel
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </details>
     </main>
   );
 }
