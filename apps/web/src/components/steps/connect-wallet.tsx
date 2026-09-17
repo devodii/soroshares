@@ -1,10 +1,15 @@
 "use client";
 
+import { Asset, Operation } from "@stellar/stellar-sdk";
+import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StepCard, StepStatus } from "@/components/step-card";
 import { useAccount } from "@/hooks/use-account";
 import { useWallet } from "@/hooks/use-wallet";
+import { apiFetch } from "@/lib/api-client";
+import { buildSignSubmit } from "@/lib/classic-tx";
+import { USDC_ISSUER } from "@/lib/env";
 import { getErrorMessage } from "@/lib/error-message";
 
 function truncate(address: string): string {
@@ -12,8 +17,9 @@ function truncate(address: string): string {
 }
 
 export function ConnectWalletStep() {
-  const { address, connecting, connect, disconnect } = useWallet();
+  const { address, connecting, connect, disconnect, signTransaction } = useWallet();
   const { data: account, refetch } = useAccount(address);
+  const [funding, setFunding] = React.useState(false);
 
   const status: StepStatus = address ? "done" : "active";
 
@@ -29,15 +35,37 @@ export function ConnectWalletStep() {
 
   async function handleFund() {
     if (!address) return;
+    setFunding(true);
     try {
       const res = await fetch(`https://friendbot.stellar.org?addr=${address}`);
       if (!res.ok) throw new Error(await res.text());
       toast.success("Funded with Friendbot");
+
+      try {
+        await buildSignSubmit(
+          address,
+          [Operation.changeTrust({ asset: new Asset("USDC", USDC_ISSUER) })],
+          signTransaction,
+        );
+        await apiFetch("/api/faucet/usdc", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ address }),
+        });
+        toast.success("Funded with test USDC");
+      } catch (err) {
+        toast.error("USDC funding failed", {
+          description: getErrorMessage(err),
+        });
+      }
+
       refetch();
     } catch (err) {
       toast.error("Friendbot failed", {
         description: getErrorMessage(err),
       });
+    } finally {
+      setFunding(false);
     }
   }
 
@@ -66,8 +94,8 @@ export function ConnectWalletStep() {
             </div>
           )}
           {account && !account.exists && (
-            <Button size="sm" onClick={handleFund}>
-              Fund with Friendbot
+            <Button size="sm" onClick={handleFund} disabled={funding}>
+              {funding ? "Funding…" : "Fund with Friendbot"}
             </Button>
           )}
         </div>
