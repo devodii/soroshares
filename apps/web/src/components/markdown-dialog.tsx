@@ -1,6 +1,7 @@
 "use client";
 
 import { CircleHelpIcon } from "lucide-react";
+import * as React from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
@@ -12,6 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 
 const markdownComponents: Components = {
   h2: ({ children }) => (
@@ -35,8 +37,23 @@ interface MarkdownDialogProps {
 }
 
 export function MarkdownDialog({ title, content }: MarkdownDialogProps) {
+  const [dismissed, setDismissed] = useLocalStorageState("soroshares:explainer-dismissed", false);
+  const [open, setOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    // dismissed is only known after hydration reads localStorage, so opening
+    // here (once, on that first real value) is the side effect itself.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!dismissed) setOpen(true);
+  }, [dismissed]);
+
+  function handleOpenChange(next: boolean) {
+    setOpen(next);
+    if (!next) setDismissed(true);
+  }
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={<Button variant="outline" size="icon" aria-label={title} />}>
         <CircleHelpIcon className="size-4" />
       </DialogTrigger>
