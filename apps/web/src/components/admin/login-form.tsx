@@ -40,7 +40,7 @@ export function AdminLoginForm() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 items-center px-4">
+    <div className="mx-auto flex w-full max-w-sm flex-1 items-center px-4">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Admin</CardTitle>
@@ -62,6 +62,6 @@ export function AdminLoginForm() {
           </form>
         </CardContent>
       </Card>
-    </main>
+    </div>
   );
 }

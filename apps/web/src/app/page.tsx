@@ -10,7 +10,7 @@ import { clientEnv } from "@/lib/env.client";
 
 export default function Home() {
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 space-y-6 px-4 py-10">
+    <div className="mx-auto w-full max-w-2xl flex-1 space-y-6 px-4 py-10">
       <header className="space-y-1">
         <h1 className="text-xl font-semibold">DPRI public offer on Stellar (testnet)</h1>
         <p className="text-sm text-muted-foreground">
@@ -61,6 +61,6 @@ export default function Home() {
           stellar.toml
         </a>
       </footer>
-    </main>
+    </div>
   );
 }
