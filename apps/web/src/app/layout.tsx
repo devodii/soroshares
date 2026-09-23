@@ -13,10 +13,7 @@ import { cn } from "cn";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const ipoExplainer = readFileSync(
-  path.join(process.cwd(), "content/ipo-explainer.md"),
-  "utf8",
-);
+const ipoExplainer = readFileSync(path.join(process.cwd(), "content/ipo-explainer.md"), "utf8");
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -44,7 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Providers>
           <header className="border-b">
             <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
-              <span className="font-semibold">soroshares</span>
+              <span className="font-semibold uppercase">soroshares</span>
               <div className="flex items-center gap-2">
                 <Badge variant="outline">Testnet</Badge>
                 <MarkdownDialog title="How this fixes oversubscription" content={ipoExplainer} />
