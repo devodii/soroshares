@@ -1,11 +1,9 @@
 "use client";
 
-import { CircleHelpIcon } from "lucide-react";
 import * as React from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +12,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
+
+const AUTO_OPEN_DELAY_MS = 4000;
 
 const markdownComponents: Components = {
   h2: ({ children }) => (
@@ -34,17 +34,22 @@ const markdownComponents: Components = {
 interface MarkdownDialogProps {
   title: string;
   content: string;
+  trigger: React.ReactElement;
+  triggerContent: React.ReactNode;
 }
 
-export function MarkdownDialog({ title, content }: MarkdownDialogProps) {
+export function MarkdownDialog({ title, content, trigger, triggerContent }: MarkdownDialogProps) {
   const [dismissed, setDismissed] = useLocalStorageState("soroshares:explainer-dismissed", false);
   const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
-    // dismissed is only known after hydration reads localStorage, so opening
-    // here (once, on that first real value) is the side effect itself.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!dismissed) setOpen(true);
+    if (dismissed) return;
+    // dismissed is only known after hydration reads localStorage, so scheduling
+    // the open here (once, on that first real value) is the side effect itself.
+    const id = setTimeout(() => {
+      setOpen(true);
+    }, AUTO_OPEN_DELAY_MS);
+    return () => clearTimeout(id);
   }, [dismissed]);
 
   function handleOpenChange(next: boolean) {
@@ -54,9 +59,7 @@ export function MarkdownDialog({ title, content }: MarkdownDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger render={<Button variant="outline" size="icon" aria-label={title} />}>
-        <CircleHelpIcon className="size-4" />
-      </DialogTrigger>
+      <DialogTrigger render={trigger}>{triggerContent}</DialogTrigger>
       <DialogContent className="max-h-[80vh] max-w-[calc(100%-2rem)] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
