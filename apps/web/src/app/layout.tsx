@@ -4,12 +4,9 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { Geist_Mono, Space_Grotesk } from "next/font/google";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { GithubIcon } from "@/components/icons/github";
-import { MarkdownDialog } from "@/components/markdown-dialog";
-import { cn } from "cn";
+import { HeaderSidebar } from "@/components/header-sidebar";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -39,27 +36,22 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col">
         <Providers>
-          <header className="border-b">
-            <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
-              <span className="font-semibold uppercase">soroshares</span>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">Testnet</Badge>
-                <MarkdownDialog title="How this fixes oversubscription" content={ipoExplainer} />
-                <a
-                  href="https://github.com/devodii/soroshares"
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="View source on GitHub"
-                  className={cn(buttonVariants({ variant: "outline", size: "icon" }))}
-                >
-                  <GithubIcon className="size-4" />
-                </a>
-                <ThemeToggle />
-              </div>
-            </div>
-          </header>
-          {children}
-          <Toaster />
+          <SidebarProvider defaultOpen={false}>
+            <HeaderSidebar explainer={ipoExplainer} />
+            <SidebarInset>
+              <header className="border-b">
+                <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
+                  <span className="font-semibold uppercase">soroshares</span>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">Testnet</Badge>
+                    <SidebarTrigger />
+                  </div>
+                </div>
+              </header>
+              {children}
+              <Toaster />
+            </SidebarInset>
+          </SidebarProvider>
           <Analytics />
         </Providers>
       </body>
